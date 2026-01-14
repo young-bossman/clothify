@@ -1,0 +1,26 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Product extends Model
+{
+    
+//use HasFactory;
+
+    protected $fillable = [
+        'name',
+        'sku',
+        'price',
+        'cost_price',
+        'description',
+        'is_active',
+    ];
+
+    // A product has many variants (sizes/colors)
+    public function variants()
+    {
+        return $this->hasMany(ProductVariant::class);
+    }
+}
