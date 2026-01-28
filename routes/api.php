@@ -1,18 +1,28 @@
 <?php
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\V1\AuthController;
 use App\Http\Controllers\API\V1\ProductController;
 use App\Http\Controllers\API\V1\ProductVariantController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
+use App\Models\Product;
 
 Route::prefix('v1')->group(function () {
 
     // --------------------
-    // Public Routes
+    // Public Auth Routes
     // --------------------
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+
+    // --------------------
+    // Public Products (Storefront)
+    // --------------------
+    Route::get('/products/public', function () {
+        return Product::where('is_active', true)
+            ->latest()
+            ->paginate(12);
+    });
 
     // --------------------
     // Protected Routes
@@ -29,14 +39,13 @@ Route::prefix('v1')->group(function () {
             ]);
         });
 
-        // Products
+        // Products (Admin / Owner)
         Route::get('/products', [ProductController::class, 'index']);
         Route::post('/products', [ProductController::class, 'store']);
         Route::get('/products/{product}', [ProductController::class, 'show']);
         Route::put('/products/{product}', [ProductController::class, 'update']);
         Route::delete('/products/{product}', [ProductController::class, 'destroy']);
 
-        // Product Variants
         Route::post('/product-variants', [ProductVariantController::class, 'store']);
     });
 });

@@ -10,21 +10,17 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-    {
-        Schema::table('products', function (Blueprint $table) {
-            //
-        });
-    }
+{
+    Schema::table('products', function (Blueprint $table) {
+        $table->string('image')->nullable()->after('description');
+    });
+}
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::table('products', function (Blueprint $table) {
-            //
+public function down(): void
+{
+    Schema::table('products', function (Blueprint $table) {
+        $table->dropColumn('image');
+    });
+}
 
-            $table->string('image')->nullable()->after('description');
-        });
-    }
 };
