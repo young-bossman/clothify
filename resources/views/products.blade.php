@@ -7,22 +7,11 @@
         <h2 class="text-2xl font-bold text-indigo-400 mb-8">Clothify</h2>
 
         <nav class="space-y-4">
-            <a href="{{ route('dashboard') }}" class="block text-gray-300 hover:text-white">
-                Dashboard
-            </a>
+            <a href="{{ route('dashboard') }}" class="block text-gray-300 hover:text-white">Dashboard</a>
+            <a href="{{ route('products') }}" class="block text-white font-semibold">Products</a>
+            <a href="#" class="block text-gray-300 hover:text-white">Orders</a>
 
-            <a href="{{ route('products') }}" class="block text-white font-semibold">
-                Products
-            </a>
-
-            <a href="#" class="block text-gray-300 hover:text-white">
-                Orders
-            </a>
-
-            <button
-                id="logoutBtn"
-                class="mt-10 w-full text-left text-red-400 hover:text-red-500"
-            >
+            <button id="logoutBtn" class="mt-10 w-full text-left text-red-400 hover:text-red-500">
                 Logout
             </button>
         </nav>
@@ -31,28 +20,43 @@
     {{-- Main --}}
     <main class="flex-1 p-10">
 
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex justify-between items-center mb-4">
             <h1 class="text-3xl font-bold">Products</h1>
-            <button
-                id="openCreateModal"
-                class="bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700"
-            >
+            <button id="openCreateModal" class="bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700">
                 + Add Product
             </button>
+        </div>
+
+        {{-- 🔍 FILTERS --}}
+        <div class="flex gap-4 mb-4">
+            <input id="searchInput" placeholder="Search name or SKU" class="bg-gray-800 p-2 rounded w-64">
+
+            <select id="statusFilter" class="bg-gray-800 p-2 rounded">
+                <option value="">All</option>
+                <option value="1">Active</option>
+                <option value="0">Inactive</option>
+            </select>
+
+            <select id="sortSelect" class="bg-gray-800 p-2 rounded">
+                <option value="created_at:desc">Newest</option>
+                <option value="name:asc">Name A–Z</option>
+                <option value="price:asc">Price Low → High</option>
+                <option value="price:desc">Price High → Low</option>
+            </select>
         </div>
 
         <div class="bg-gray-800 rounded-xl p-6 overflow-x-auto">
             <table class="w-full text-left">
                 <thead class="text-gray-400 border-b border-gray-700">
                     <tr>
-                        <th class="pb-3">Image</th>
-                        <th class="pb-3">Name</th>
-                        <th class="pb-3">SKU</th>
-                        <th class="pb-3">Price</th>
-                        <th class="pb-3">Cost Price</th>
-                        <th class="pb-3">Description</th>
-                        <th class="pb-3">Status</th>
-                        <th class="pb-3 text-right">Actions</th>
+                        <th>Image</th>
+                        <th>Name</th>
+                        <th>SKU</th>
+                        <th>Price</th>
+                        <th>Cost</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th class="text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="productsTable"></tbody>
@@ -112,6 +116,7 @@
     </form>
 </div>
 
+{{-- JS --}}
 @vite('resources/js/products.js')
 
 </x-app>

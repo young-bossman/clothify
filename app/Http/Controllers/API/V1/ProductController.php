@@ -10,10 +10,34 @@ use Illuminate\Support\Facades\Storage;
 class ProductController extends Controller
 {
     // GET /api/v1/products
-    public function index()
+    public function index(Request $request)
     {
+        $query = Product::query();
+
+        // 🔍 SEARCH
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('sku', 'like', "%{$search}%");
+            });
+        }
+
+        // ✅ FILTER ACTIVE / INACTIVE
+        if ($request->filled('status')) {
+            $query->where('is_active', $request->status);
+        }
+
+        // 🔃 SORTING
+        $sortBy  = $request->get('sort_by', 'created_at');
+        $sortDir = $request->get('sort_dir', 'desc');
+
+        if (in_array($sortBy, ['name', 'price', 'created_at'])) {
+            $query->orderBy($sortBy, $sortDir);
+        }
+
         return response()->json(
-            Product::with('variants')->latest()->paginate(10)
+            $query->latest()->paginate(10)
         );
     }
 
@@ -27,24 +51,23 @@ class ProductController extends Controller
             'cost_price'  => 'required|numeric|min:0',
             'description' => 'nullable|string',
             'image'       => 'nullable|image|max:2048',
+            'is_active'   => 'required|boolean',
         ]);
 
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')
-                ->store('products', 'public');
+            $validated['image'] = $request->file('image')->store('products', 'public');
         }
 
-        $product = Product::create($validated);
-
-        return response()->json($product, 201);
+        return response()->json(
+            Product::create($validated),
+            201
+        );
     }
 
     // GET /api/v1/products/{product}
     public function show(Product $product)
     {
-        return response()->json(
-            $product->load('variants')
-        );
+        return response()->json($product);
     }
 
     // PUT /api/v1/products/{product}
@@ -64,9 +87,7 @@ class ProductController extends Controller
             if ($product->image) {
                 Storage::disk('public')->delete($product->image);
             }
-
-            $validated['image'] = $request->file('image')
-                ->store('products', 'public');
+            $validated['image'] = $request->file('image')->store('products', 'public');
         }
 
         $product->update($validated);
@@ -83,8 +104,6 @@ class ProductController extends Controller
 
         $product->delete();
 
-        return response()->json([
-            'message' => 'Product deleted successfully',
-        ]);
+        return response()->json(['message' => 'Product deleted']);
     }
 }
