@@ -46,6 +46,9 @@ Route::prefix('v1')->group(function () {
         Route::put('/products/{product}', [ProductController::class, 'update']);
         Route::delete('/products/{product}', [ProductController::class, 'destroy']);
 
+        Route::post('/products/{product}/adjust-stock', [ProductController::class, 'adjustStock']);
+
+
         Route::post('/product-variants', [ProductVariantController::class, 'store']);
     });
 });

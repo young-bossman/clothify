@@ -76,7 +76,15 @@
         <input name="price" type="number" step="0.01" placeholder="Price" class="w-full p-2 bg-gray-700 rounded" required>
         <input name="cost_price" type="number" step="0.01" placeholder="Cost Price" class="w-full p-2 bg-gray-700 rounded" required>
         <textarea name="description" placeholder="Description" class="w-full p-2 bg-gray-700 rounded"></textarea>
-        <input type="file" name="image" accept="image/*" class="w-full text-sm text-gray-400">
+         <label class="block text-sm mb-1">Product Image</label>
+
+<!-- CREATE IMAGE WRAPPER -->
+<div id="createImageWrapper"
+     class="flex flex-col items-center justify-center border-2 border-dashed border-gray-500 rounded h-32 cursor-pointer mb-2">
+    <img id="createImagePreview" src="" alt="Preview" class="hidden h-28 w-auto rounded mb-1">
+    <span id="createImageText" class="text-gray-400 text-sm">Click or drag an image here</span>
+    <input type="file" id="createImage" name="image" accept="image/*" class="hidden">
+</div>
 
         <label class="flex items-center gap-2">
             <input type="checkbox" name="is_active" value="1" checked>
@@ -102,7 +110,15 @@
         <input id="editPrice" type="number" step="0.01" placeholder="Price" class="w-full p-2 bg-gray-700 rounded" required>
         <input id="editCostPrice" type="number" step="0.01" placeholder="Cost Price" class="w-full p-2 bg-gray-700 rounded" required>
         <textarea id="editDescription" placeholder="Description" class="w-full p-2 bg-gray-700 rounded"></textarea>
-        <input type="file" id="editImage" accept="image/*" class="w-full text-sm text-gray-400">
+         
+      <label class="block text-sm mb-1">Product Image</label>
+        <div id="editImageWrapper"
+     class="flex flex-col items-center justify-center border-2 border-dashed border-gray-500 rounded h-32 cursor-pointer mb-2">
+    <img id="editImagePreview" src="" alt="Preview" class="hidden h-28 w-auto rounded mb-1">
+    <span id="editImageText" class="text-gray-400 text-sm">Click or drag an image here</span>
+    <input type="file" id="editImage" name="image" accept="image/*" class="hidden">
+</div>
+
 
         <label class="flex items-center gap-2">
             <input type="checkbox" id="editIsActive">

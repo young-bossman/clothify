@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Models\StockMovement;
 
 class ProductController extends Controller
 {
     // GET /api/v1/products
+    // List products with pagination, search, and sorting
     public function index(Request $request)
     {
         $query = Product::query();
@@ -23,7 +25,7 @@ class ProductController extends Controller
             });
         }
 
-        // ✅ FILTER ACTIVE / INACTIVE
+        // FILTER ACTIVE / INACTIVE
         if ($request->filled('status')) {
             $query->where('is_active', $request->status);
         }
@@ -42,15 +44,17 @@ class ProductController extends Controller
     }
 
     // POST /api/v1/products
+    // Handle product creation with validation and image upload
     public function store(Request $request)
     {
+        
         $validated = $request->validate([
             'name'        => 'required|string|max:255',
             'sku'         => 'required|string|max:255|unique:products,sku',
             'price'       => 'required|numeric|min:0',
             'cost_price'  => 'required|numeric|min:0',
             'description' => 'nullable|string',
-            'image'       => 'nullable|image|max:2048',
+            'image'       => 'nullable|image|max:2048|mimes:jpeg,png,jpg',
             'is_active'   => 'required|boolean',
         ]);
 
@@ -65,6 +69,7 @@ class ProductController extends Controller
     }
 
     // GET /api/v1/products/{product}
+    // Route model binding will automatically fetch the product by ID
     public function show(Product $product)
     {
         return response()->json($product);
@@ -94,8 +99,40 @@ class ProductController extends Controller
 
         return response()->json($product->fresh());
     }
+// POST /api/v1/products/{product}/adjust-stock
+// Adjust stock quantity and log the movement
+    public function adjustStock(Request $request, Product $product)
+{
+    $validated = $request->validate([
+        'quantity' => 'required|integer',
+        'type' => 'required|in:adjustment,restock,damage,return',
+        'note' => 'nullable|string|max:255'
+    ]);
+
+    // Update product stock
+    $product->stock_quantity += $validated['quantity'];
+    $product->save();
+
+    // Record movement
+    StockMovement::create([
+        'product_id' => $product->id,
+        'quantity' => $validated['quantity'],
+        'type' => $validated['type'],
+        'note' => $validated['note'] ?? null,
+        'user_id' => auth()->id()
+    ]);
+
+    return response()->json([
+        'message' => 'Stock updated successfully',
+        'stock_quantity' => $product->stock_quantity
+    ]);
+}
+
+
+
 
     // DELETE /api/v1/products/{product}
+    // Delete product and associated image
     public function destroy(Product $product)
     {
         if ($product->image) {

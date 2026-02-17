@@ -1,4 +1,3 @@
-console.log('Auth JS loaded')
 
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm')
