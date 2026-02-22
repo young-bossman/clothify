@@ -6,6 +6,7 @@ use App\Http\Controllers\API\V1\AuthController;
 use App\Http\Controllers\API\V1\ProductController;
 use App\Http\Controllers\API\V1\ProductVariantController;
 use App\Models\Product;
+use App\Http\Controllers\API\V1\CategoryController;
 
 Route::prefix('v1')->group(function () {
 
@@ -50,5 +51,12 @@ Route::prefix('v1')->group(function () {
 
 
         Route::post('/product-variants', [ProductVariantController::class, 'store']);
+
+        // Categories
+Route::get('/categories', [CategoryController::class, 'index']);
+Route::post('/categories', [CategoryController::class, 'store']);
+Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
+
+        
     });
 });

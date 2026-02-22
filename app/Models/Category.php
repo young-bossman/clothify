@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+// ADDED: import Product model
+use App\Models\Product;
+
 class Category extends Model
 {
     protected $fillable = [
