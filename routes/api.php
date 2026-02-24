@@ -5,29 +5,30 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\V1\AuthController;
 use App\Http\Controllers\API\V1\ProductController;
 use App\Http\Controllers\API\V1\ProductVariantController;
-use App\Models\Product;
 use App\Http\Controllers\API\V1\CategoryController;
 
 Route::prefix('v1')->group(function () {
 
-    // --------------------
+    // ----------------------------------------
     // Public Auth Routes
-    // --------------------
+    // ----------------------------------------
     Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login',    [AuthController::class, 'login']);
 
-    // --------------------
-    // Public Products (Storefront)
-    // --------------------
-    Route::get('/products/public', function () {
-        return Product::where('is_active', true)
-            ->latest()
-            ->paginate(12);
-    });
+    // ----------------------------------------
+    // Public Storefront Routes (no token needed)
+    // ----------------------------------------
 
-    // --------------------
-    // Protected Routes
-    // --------------------
+    // Products — index handles ?public=1 to filter active only
+    // show — customers need to view individual product detail
+    // categories — needed to populate filters and pills on storefront
+    Route::get('/products',           [ProductController::class, 'index']);
+    Route::get('/products/{product}', [ProductController::class, 'show']);
+    Route::get('/categories',         [CategoryController::class, 'index']);
+
+    // ----------------------------------------
+    // Protected Routes (token required)
+    // ----------------------------------------
     Route::middleware('auth:sanctum')->group(function () {
 
         Route::post('/logout', [AuthController::class, 'logout']);
@@ -40,23 +41,19 @@ Route::prefix('v1')->group(function () {
             ]);
         });
 
-        // Products (Admin / Owner)
-        Route::get('/products', [ProductController::class, 'index']);
-        Route::post('/products', [ProductController::class, 'store']);
-        Route::get('/products/{product}', [ProductController::class, 'show']);
-        Route::put('/products/{product}', [ProductController::class, 'update']);
-        Route::delete('/products/{product}', [ProductController::class, 'destroy']);
+        // Products — write operations (admin only)
+        Route::post('/products',                          [ProductController::class, 'store']);
+        Route::put('/products/{product}',                 [ProductController::class, 'update']);
+        Route::delete('/products/{product}',              [ProductController::class, 'destroy']);
+        Route::post('/products/{product}/adjust-stock',   [ProductController::class, 'adjustStock']);
 
-        Route::post('/products/{product}/adjust-stock', [ProductController::class, 'adjustStock']);
-
-
+        // Product variants
         Route::post('/product-variants', [ProductVariantController::class, 'store']);
 
-        // Categories
-Route::get('/categories', [CategoryController::class, 'index']);
-Route::post('/categories', [CategoryController::class, 'store']);
-Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
+        // Categories — write operations (admin only)
+        Route::post('/categories',              [CategoryController::class, 'store']);
+        Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
 
-        
     });
+
 });

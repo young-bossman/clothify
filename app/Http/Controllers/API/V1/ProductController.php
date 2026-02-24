@@ -13,43 +13,59 @@ class ProductController extends Controller
 {
     // GET /api/v1/products
     // List products with pagination, search, and sorting
-    public function index(Request $request)
+     public function index(Request $request)
     {
-        // ADDED: eager load category
         $query = Product::with('category');
 
-        // 🔍 SEARCH
+        // Only show active products on the public storefront
+        // Admin panel passes no `public` param so it sees everything
+        if ($request->boolean('public')) {
+            $query->where('is_active', true);
+        }
+
+        // Search by name or SKU
         if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%");
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('sku', 'like', '%' . $request->search . '%');
             });
         }
 
-        // ADDED: search/filter by category
+        // Filter by active status (admin panel only)
+        if ($request->filled('status')) {
+            $query->where('is_active', $request->status === 'active');
+        }
+
+        // Filter by category
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
         }
 
-        // FILTER ACTIVE / INACTIVE
-        if ($request->filled('status')) {
-            $query->where('is_active', $request->status);
+        // Filter by price range (storefront)
+        if ($request->filled('price_min')) {
+            $query->where('price', '>=', $request->price_min);
         }
 
-        // 🔃 SORTING
-        $sortBy  = $request->get('sort_by', 'created_at');
-        $sortDir = $request->get('sort_dir', 'desc');
-
-        if (in_array($sortBy, ['name', 'price', 'created_at'])) {
-            $query->orderBy($sortBy, $sortDir);
+        if ($request->filled('price_max')) {
+            $query->where('price', '<=', $request->price_max);
         }
+
+        // Sorting
+        $sortBy  = in_array($request->sort_by, ['name', 'price', 'created_at'])
+            ? $request->sort_by
+            : 'created_at';
+        $sortDir = $request->sort_dir === 'asc' ? 'asc' : 'desc';
+
+        $query->orderBy($sortBy, $sortDir);
 
         return response()->json(
-            $query->latest()->paginate(10)
+            $query->paginate(12)
         );
-    }   
+    }
 
+    /**
+     * Store a new product.
+     */
     // POST /api/v1/products
     // Handle product creation with validation and image upload
     public function store(Request $request)

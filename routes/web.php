@@ -27,3 +27,7 @@ Route::get('/dashboard', function () {
 Route::get('/products', function () {
     return view('products');
 })->name('products');
+
+ Route::get('/shop', function () {
+    return view('shop');
+            })->name('shop');

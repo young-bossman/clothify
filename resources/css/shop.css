@@ -1,0 +1,168 @@
+/*
+ * shop.css
+ *
+ * ONLY contains CSS custom property definitions for the
+ * 3-way theme system (dark / dim / light).
+ *
+ * Everything else on the shop page is handled by Tailwind
+ * utility classes directly in shop.blade.php.
+ */
+
+[data-theme="dark"] {
+    --bg:    #0c0c0c;
+    --bg2:   #141414;
+    --bg3:   #1c1c1c;
+    --bdr:   #262626;
+    --bdr2:  #363636;
+    --tx:    #f0ece4;
+    --tx2:   #888480;
+    --tx3:   #444440;
+    --ac:    #c8a96e;
+    --ac2:   #9a7840;
+    --acg:   rgba(200, 169, 110, 0.1);
+    --shd:   0 8px 48px rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="dim"] {
+    --bg:    #18150f;
+    --bg2:   #201c16;
+    --bg3:   #2a251e;
+    --bdr:   #38342a;
+    --bdr2:  #4a4438;
+    --tx:    #ede8df;
+    --tx2:   #98907a;
+    --tx3:   #605848;
+    --ac:    #c8a96e;
+    --ac2:   #9a7840;
+    --acg:   rgba(200, 169, 110, 0.09);
+    --shd:   0 8px 48px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] {
+    --bg:    #faf8f4;
+    --bg2:   #f2ede4;
+    --bg3:   #ffffff;
+    --bdr:   #e4ddd0;
+    --bdr2:  #cdc4b0;
+    --tx:    #1a1714;
+    --tx2:   #706050;
+    --tx3:   #b0a090;
+    --ac:    #8b6830;
+    --ac2:   #6b5020;
+    --acg:   rgba(139, 104, 48, 0.08);
+    --shd:   0 8px 48px rgba(0, 0, 0, 0.08);
+}
+
+/*
+ * These utility classes bridge the CSS variables into
+ * Tailwind's arbitrary value syntax. Used on elements
+ * that need the theme-aware colours directly in blade.
+ */
+.bg-theme      { background-color: var(--bg); }
+.bg-theme2     { background-color: var(--bg2); }
+.bg-theme3     { background-color: var(--bg3); }
+.border-theme  { border-color: var(--bdr); }
+.border-theme2 { border-color: var(--bdr2); }
+.text-theme    { color: var(--tx); }
+.text-theme2   { color: var(--tx2); }
+.text-theme3   { color: var(--tx3); }
+.text-accent   { color: var(--ac); }
+.bg-accent     { background-color: var(--ac); }
+.bg-accent-glow{ background-color: var(--acg); }
+.shadow-theme  { box-shadow: var(--shd); }
+
+/* Transition helper — applies theme transition to any element */
+.theme-transition {
+    transition: background-color 0.35s ease,
+                color 0.35s ease,
+                border-color 0.35s ease;
+}
+
+/* Font families — registered here, used via class in blade */
+.font-display { font-family: 'Cormorant Garamond', serif; }
+.font-mono-dm { font-family: 'DM Mono', monospace; }
+
+/*
+ * Price toggle — the collapsible price range on mobile.
+ * Needs a small CSS rule for the chevron rotation that
+ * Tailwind can't express with just classes.
+ */
+.price-toggle-chevron {
+    transition: transform 0.25s ease;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+.price-toggle.active .price-toggle-chevron {
+    transform: rotate(180deg);
+}
+
+/*
+ * Quick-add button on product cards — slides up on hover.
+ * Uses CSS transform that is cleaner here than in JS.
+ */
+.quick-add {
+    transform: translateY(100%);
+    transition: transform 0.28s ease;
+}
+.product-card:hover .quick-add {
+    transform: translateY(0);
+}
+
+/* Touch devices: always show quick-add (no hover state) */
+@media (hover: none) {
+    .quick-add {
+        transform: translateY(0);
+    }
+}
+
+/*
+ * Eyebrow line — the decorative line before section labels.
+ * Pseudo-element, easier here than arbitrary Tailwind.
+ */
+.eyebrow-line::before {
+    content: '';
+    display: inline-block;
+    width: 24px;
+    height: 1px;
+    background-color: var(--ac);
+    margin-right: 0.65rem;
+    vertical-align: middle;
+}
+
+/*
+ * Hero decorative letter — large background character.
+ */
+.hero-deco {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14rem;
+    font-weight: 300;
+    color: var(--bdr);
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+    transition: color 0.35s;
+}
+
+/*
+ * Cart drawer and modal animations —
+ * backdrop-filter not available as Tailwind class in all setups.
+ */
+.backdrop-blur-modal {
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+.backdrop-blur-cart {
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+}
+
+/*
+ * Toast slide-up animation.
+ */
+.toast-enter {
+    transform: translateX(-50%) translateY(0) !important;
+}
