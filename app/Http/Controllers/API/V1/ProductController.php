@@ -5,15 +5,16 @@ namespace App\Http\Controllers\API\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Models\StockMovement;
-use App\Models\Category; // ADDED: for category validation
+use App\Models\Category;
 
 class ProductController extends Controller
 {
     // GET /api/v1/products
     // List products with pagination, search, and sorting
-     public function index(Request $request)
+    public function index(Request $request)
     {
         $query = Product::with('category');
 
@@ -63,66 +64,59 @@ class ProductController extends Controller
         );
     }
 
-    /**
-     * Store a new product.
-     */
     // POST /api/v1/products
     // Handle product creation with validation and image upload
     public function store(Request $request)
     {
-        
-    // 🔥 HANDLE NEW CATEGORY CREATION
-if ($request->category_id === 'new' && $request->new_category) {
-    $newCategory = Category::create([
-        'name' => $request->new_category
-    ]);
-
-    $request->merge([
-        'category_id' => $newCategory->id
-    ]);
-}
-
-        
+        // Validate FIRST before touching the database.
+        // category_id is nullable here — new category creation
+        // happens after validation passes inside the transaction.
         $validated = $request->validate([
             'name'           => 'required|string|max:255',
             'sku'            => 'required|string|max:255|unique:products,sku',
             'price'          => 'required|numeric|min:0',
             'cost_price'     => 'required|numeric|min:0',
-            'stock_quantity' => 'required|integer|min:0', // ADDED
-            'category_id'    => 'nullable|exists:categories,id', // ADDED
+            'stock_quantity' => 'required|integer|min:0',
+            'category_id'    => 'nullable',
             'description'    => 'nullable|string',
             'image'          => 'nullable|image|max:2048|mimes:jpeg,png,jpg',
             'is_active'      => 'required|boolean',
         ]);
 
-        if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('products', 'public');
-        }
+        return DB::transaction(function () use ($request, $validated) {
 
-        // ADDED: create product first
-        $product = Product::create($validated);
+            // 🔥 HANDLE NEW CATEGORY CREATION
+            // Runs after validation so a failed SKU check never
+            // leaves an orphan category in the database.
+            if ($request->category_id === 'new' && $request->new_category) {
+                $newCategory = Category::create(['name' => $request->new_category]);
+                $validated['category_id'] = $newCategory->id;
+            }
 
-        // ADDED: create initial stock movement if stock > 0
-        if ($product->stock_quantity > 0) {
-            StockMovement::create([
-                'product_id' => $product->id,
-                'quantity'   => $product->stock_quantity,
-                'type'       => 'restock',
-                'note'       => 'Initial stock',
-                'user_id'    => auth()->id()
-            ]);
-        }
+            if ($request->hasFile('image')) {
+                $validated['image'] = $request->file('image')->store('products', 'public');
+            }
 
-        return response()->json(
-            $product->load('category'),
-            201
-        );
+            $product = Product::create($validated);
+
+            // Record initial stock movement if stock > 0
+            if ($product->stock_quantity > 0) {
+                StockMovement::create([
+                    'product_id' => $product->id,
+                    'quantity'   => $product->stock_quantity,
+                    'type'       => 'restock',
+                    'note'       => 'Initial stock',
+                    'user_id'    => auth()->id()
+                ]);
+            }
+
+            return response()->json($product->load('category'), 201);
+        });
     }
 
     // GET /api/v1/products/{product}
     public function show(Product $product)
     {
-        // ADDED: include category relation
         return response()->json(
             $product->load('category')
         );
@@ -131,38 +125,39 @@ if ($request->category_id === 'new' && $request->new_category) {
     // PUT /api/v1/products/{product}
     public function update(Request $request, Product $product)
     {
-
-    // 🔥 HANDLE NEW CATEGORY CREATION
-if ($request->category_id === 'new' && $request->new_category) {
-    $newCategory = Category::create([
-        'name' => $request->new_category
-    ]);
-
-    $request->merge([
-        'category_id' => $newCategory->id
-    ]);
-}
+        // Validate FIRST before touching the database.
         $validated = $request->validate([
             'name'        => 'sometimes|string|max:255',
             'sku'         => 'sometimes|string|max:255|unique:products,sku,' . $product->id,
             'price'       => 'sometimes|numeric|min:0',
             'cost_price'  => 'sometimes|numeric|min:0',
-            'category_id' => 'nullable|exists:categories,id', // ADDED
+            'category_id' => 'nullable',
             'description' => 'nullable|string',
             'is_active'   => 'sometimes|boolean',
             'image'       => 'nullable|image|max:2048',
         ]);
 
-        if ($request->hasFile('image')) {
-            if ($product->image) {
-                Storage::disk('public')->delete($product->image);
+        return DB::transaction(function () use ($request, $validated, $product) {
+
+            // 🔥 HANDLE NEW CATEGORY CREATION
+            // Runs after validation so a failed SKU check never
+            // leaves an orphan category in the database.
+            if ($request->category_id === 'new' && $request->new_category) {
+                $newCategory = Category::create(['name' => $request->new_category]);
+                $validated['category_id'] = $newCategory->id;
             }
-            $validated['image'] = $request->file('image')->store('products', 'public');
-        }
 
-        $product->update($validated);
+            if ($request->hasFile('image')) {
+                if ($product->image) {
+                    Storage::disk('public')->delete($product->image);
+                }
+                $validated['image'] = $request->file('image')->store('products', 'public');
+            }
 
-        return response()->json($product->fresh()->load('category'));
+            $product->update($validated);
+
+            return response()->json($product->fresh()->load('category'));
+        });
     }
 
     // POST /api/v1/products/{product}/adjust-stock
@@ -170,8 +165,8 @@ if ($request->category_id === 'new' && $request->new_category) {
     {
         $validated = $request->validate([
             'quantity' => 'required|integer',
-            'type' => 'required|in:adjustment,restock,damage,return',
-            'note' => 'nullable|string|max:255'
+            'type'     => 'required|in:adjustment,restock,damage,return',
+            'note'     => 'nullable|string|max:255'
         ]);
 
         // Update product stock
@@ -181,14 +176,14 @@ if ($request->category_id === 'new' && $request->new_category) {
         // Record movement
         StockMovement::create([
             'product_id' => $product->id,
-            'quantity' => $validated['quantity'],
-            'type' => $validated['type'],
-            'note' => $validated['note'] ?? null,
-            'user_id' => auth()->id()
+            'quantity'   => $validated['quantity'],
+            'type'       => $validated['type'],
+            'note'       => $validated['note'] ?? null,
+            'user_id'    => auth()->id()
         ]);
 
         return response()->json([
-            'message' => 'Stock updated successfully',
+            'message'        => 'Stock updated successfully',
             'stock_quantity' => $product->stock_quantity
         ]);
     }

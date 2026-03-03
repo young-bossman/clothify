@@ -80,17 +80,13 @@
 </div>
 
 {{-- ================= CREATE PRODUCT MODAL ================= --}}
-<div id="createModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-    {{--
-        CHANGED: added max-h-[90vh] overflow-y-auto so the form scrolls
-        vertically on smaller screens instead of overflowing off screen
-    --}}
+<div id="createModal" class="hidden fixed inset-0 bg-black/60 z-50 items-center justify-center">
     <form id="productForm"
           class="bg-gray-800 p-6 rounded-lg w-96 space-y-3 max-h-[90vh] overflow-y-auto">
         <h2 class="text-lg font-bold">Add Product</h2>
 
-        {{-- Inline Error Container --}}
-        <div id="createErrors" class="text-red-400 text-sm space-y-1"></div>
+        {{-- Error container — scroll target --}}
+        <div id="createErrors" class="hidden text-red-400 text-sm space-y-1 bg-red-900/30 border border-red-500/40 rounded p-3"></div>
 
         <input name="name" placeholder="Product name"
                class="w-full p-2 text-sm bg-gray-700 rounded" required>
@@ -100,31 +96,19 @@
                class="w-full p-2 text-sm bg-gray-700 rounded" required>
         <input name="cost_price" type="number" step="0.01" placeholder="Cost Price"
                class="w-full p-2 text-sm bg-gray-700 rounded" required>
-
-        {{-- Initial Stock --}}
         <input name="stock_quantity" type="number" min="0" placeholder="Initial Stock Quantity"
                class="w-full p-2 text-sm bg-gray-700 rounded" required>
 
-        {{-- Category Select: populated via JS loadCategories() --}}
         <select id="createCategorySelect" name="category_id"
                 class="w-full p-2 text-sm bg-gray-700 rounded">
             <option value="">Select Category</option>
         </select>
 
-        {{--
-            New Category section:
-            - The input is hidden by default
-            - The toggle button shows/hides it
-            - When visible, the select is disabled so only one method is active at a time
-        --}}
         <div class="flex items-center gap-2">
-            <input type="text"
-                   id="createNewCategory"
-                   name="new_category"
+            <input type="text" id="createNewCategory" name="new_category"
                    placeholder="Enter new category name"
                    class="w-full p-2 text-sm bg-gray-700 rounded hidden">
-            <button type="button"
-                    id="toggleCreateCategory"
+            <button type="button" id="toggleCreateCategory"
                     class="text-indigo-400 text-sm whitespace-nowrap hover:text-indigo-300">
                 + New Category
             </button>
@@ -134,73 +118,48 @@
                   class="w-full p-2 text-sm bg-gray-700 rounded h-20"></textarea>
 
         <label class="block text-sm mb-1">Product Image</label>
-
         <div id="createImageWrapper"
              class="flex flex-col items-center justify-center border-2 border-dashed border-gray-500 rounded h-28 cursor-pointer">
-            <img id="createImagePreview" src="" alt="Preview"
-                 class="hidden h-24 w-auto rounded mb-1">
+            <img id="createImagePreview" src="" alt="Preview" class="hidden h-24 w-auto rounded mb-1">
             <span id="createImageText" class="text-gray-400 text-xs">Click or drag an image here</span>
             <input type="file" id="createImage" name="image" accept="image/*" class="hidden">
         </div>
 
         <label class="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="is_active" value="1" checked>
-            Active
+            <input type="checkbox" name="is_active" value="1" checked> Active
         </label>
 
         <div class="flex justify-end gap-3 pt-2">
             <button type="button" id="closeCreateModal" class="text-gray-400 text-sm">Cancel</button>
-            <button type="submit" id="createSubmitBtn"
-                    class="bg-indigo-600 px-4 py-2 text-sm rounded">
-                Save
-            </button>
+            <button type="submit" id="createSubmitBtn" class="bg-indigo-600 px-4 py-2 text-sm rounded">Save</button>
         </div>
     </form>
 </div>
 
+
 {{-- ================= EDIT PRODUCT MODAL ================= --}}
-<div id="editModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-    {{--
-        CHANGED: added max-h-[90vh] overflow-y-auto so the form scrolls
-        vertically on smaller screens instead of overflowing off screen
-    --}}
+<div id="editModal" class="hidden fixed inset-0 bg-black/60 z-50 items-center justify-center">
     <form id="editProductForm"
           class="bg-gray-800 p-6 rounded-lg w-96 space-y-3 max-h-[90vh] overflow-y-auto">
         <h2 class="text-lg font-bold">Edit Product</h2>
 
-        {{-- Inline Error Container --}}
-        <div id="editErrors" class="text-red-400 text-sm space-y-1"></div>
+        <div id="editErrors" class="hidden text-red-400 text-sm space-y-1 bg-red-900/30 border border-red-500/40 rounded p-3"></div>
 
         <input type="hidden" id="editProductId">
+        <input id="editName" placeholder="Product name" class="w-full p-2 text-sm bg-gray-700 rounded" required>
+        <input id="editSku" placeholder="SKU" class="w-full p-2 text-sm bg-gray-700 rounded" required>
+        <input id="editPrice" type="number" step="0.01" placeholder="Price" class="w-full p-2 text-sm bg-gray-700 rounded" required>
+        <input id="editCostPrice" type="number" step="0.01" placeholder="Cost Price" class="w-full p-2 text-sm bg-gray-700 rounded" required>
 
-        <input id="editName" placeholder="Product name"
-               class="w-full p-2 text-sm bg-gray-700 rounded" required>
-        <input id="editSku" placeholder="SKU"
-               class="w-full p-2 text-sm bg-gray-700 rounded" required>
-        <input id="editPrice" type="number" step="0.01" placeholder="Price"
-               class="w-full p-2 text-sm bg-gray-700 rounded" required>
-        <input id="editCostPrice" type="number" step="0.01" placeholder="Cost Price"
-               class="w-full p-2 text-sm bg-gray-700 rounded" required>
-
-        {{-- Category Select: populated via JS loadCategories() --}}
-        <select id="editCategorySelect" name="category_id"
-                class="w-full p-2 text-sm bg-gray-700 rounded">
+        <select id="editCategorySelect" name="category_id" class="w-full p-2 text-sm bg-gray-700 rounded">
             <option value="">Select Category</option>
         </select>
 
-        {{--
-            New Category section:
-            - Same pattern as create modal
-            - Toggle button shows/hides the input and disables the select
-        --}}
         <div class="flex items-center gap-2">
-            <input type="text"
-                   id="editNewCategory"
-                   name="new_category"
+            <input type="text" id="editNewCategory" name="new_category"
                    placeholder="Enter new category name"
                    class="w-full p-2 text-sm bg-gray-700 rounded hidden">
-            <button type="button"
-                    id="toggleEditCategory"
+            <button type="button" id="toggleEditCategory"
                     class="text-indigo-400 text-sm whitespace-nowrap hover:text-indigo-300">
                 + New Category
             </button>
@@ -210,29 +169,25 @@
                   class="w-full p-2 text-sm bg-gray-700 rounded h-20"></textarea>
 
         <label class="block text-sm mb-1">Product Image</label>
-
         <div id="editImageWrapper"
              class="flex flex-col items-center justify-center border-2 border-dashed border-gray-500 rounded h-28 cursor-pointer">
-            <img id="editImagePreview" src="" alt="Preview"
-                 class="hidden h-24 w-auto rounded mb-1">
+            <img id="editImagePreview" src="" alt="Preview" class="hidden h-24 w-auto rounded mb-1">
             <span id="editImageText" class="text-gray-400 text-xs">Click or drag an image here</span>
             <input type="file" id="editImage" name="image" accept="image/*" class="hidden">
         </div>
 
         <label class="flex items-center gap-2 text-sm">
-            <input type="checkbox" id="editIsActive">
-            Active
+            <input type="checkbox" id="editIsActive"> Active
         </label>
 
         <div class="flex justify-end gap-3 pt-2">
             <button type="button" id="closeEditModal" class="text-gray-400 text-sm">Cancel</button>
-            <button type="submit" id="editSubmitBtn"
-                    class="bg-indigo-600 px-4 py-2 text-sm rounded">
-                Update
-            </button>
+            <button type="submit" id="editSubmitBtn" class="bg-indigo-600 px-4 py-2 text-sm rounded">Update</button>
         </div>
     </form>
 </div>
+
+
 
 {{-- JS --}}
 @vite('resources/js/products.js')
