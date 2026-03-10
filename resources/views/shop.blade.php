@@ -347,7 +347,7 @@
                 <span class="font-mono-dm text-[.68rem] uppercase tracking-[.1em] text-theme3">Total</span>
                 <span id="cartTotal" class="font-display text-[1.3rem] text-theme">GHS 0.00</span>
             </div>
-            <button class="w-full bg-accent text-white border-none py-[.85rem] font-sans text-[.73rem] font-medium tracking-[.12em] uppercase rounded-[7px] cursor-pointer transition-all hover:bg-ac2">
+            <button id="checkoutBtn" class="w-full bg-accent text-white border-none py-[.85rem] font-sans text-[.73rem] font-medium tracking-[.12em] uppercase rounded-[7px] cursor-pointer transition-all hover:bg-ac2">
                 Proceed to Checkout
             </button>
         </div>
@@ -361,7 +361,212 @@
     </div>
 
 
+{{-- =====================================================
+     AUTH MODAL (login / signup — checkout gate)
+====================================================== --}}
+<div id="authModal"
+    class="fixed inset-0 bg-black/70 backdrop-blur-modal z-[400] hidden items-center justify-center p-5">
+    <div class="bg-theme2 border border-bdr2 rounded-[14px] w-full max-w-[420px] p-8 relative theme-transition">
 
+        <button id="closeAuthModal"
+            class="absolute top-3 right-3 w-[30px] h-[30px] rounded-full border border-theme bg-theme2 text-theme2 cursor-pointer flex items-center justify-center hover:border-accent hover:text-accent theme-transition">
+            ✕
+        </button>
+
+        {{-- Tabs --}}
+        <div class="flex gap-4 mb-7 border-b border-theme pb-3">
+            <button id="tabLogin"
+                class="font-display text-[1.1rem] font-light text-accent border-b-2 border-accent pb-1 transition-all">
+                Sign In
+            </button>
+            <button id="tabSignup"
+                class="font-display text-[1.1rem] font-light text-theme2 border-b-2 border-transparent pb-1 transition-all">
+                Create Account
+            </button>
+        </div>
+
+        {{-- Login Form --}}
+        <div id="loginForm" class="space-y-4">
+            <div>
+                <label class="font-mono-dm text-[.62rem] tracking-[.15em] uppercase text-theme3 block mb-1">Email</label>
+                <input id="loginEmail" type="email" placeholder="you@example.com"
+                    class="w-full bg-theme border border-theme rounded-[7px] py-[.65rem] px-3 font-sans text-[.85rem] text-theme outline-none focus:border-accent theme-transition">
+            </div>
+            <div>
+                <label class="font-mono-dm text-[.62rem] tracking-[.15em] uppercase text-theme3 block mb-1">Password</label>
+                <input id="loginPassword" type="password" placeholder="••••••••"
+                    class="w-full bg-theme border border-theme rounded-[7px] py-[.65rem] px-3 font-sans text-[.85rem] text-theme outline-none focus:border-accent theme-transition">
+            </div>
+            <p id="loginError" class="text-red-400 text-[.75rem] hidden"></p>
+            <button id="loginSubmit"
+                class="w-full bg-accent text-white border-none py-[.85rem] font-sans text-[.73rem] font-medium tracking-[.12em] uppercase rounded-[7px] cursor-pointer transition-all hover:bg-ac2">
+                Sign In
+            </button>
+        </div>
+
+        {{-- Signup Form --}}
+        <div id="signupForm" class="space-y-4 hidden">
+            <div>
+                <label class="font-mono-dm text-[.62rem] tracking-[.15em] uppercase text-theme3 block mb-1">Full Name</label>
+                <input id="signupName" type="text" placeholder="Your name"
+                    class="w-full bg-theme border border-theme rounded-[7px] py-[.65rem] px-3 font-sans text-[.85rem] text-theme outline-none focus:border-accent theme-transition">
+            </div>
+            <div>
+                <label class="font-mono-dm text-[.62rem] tracking-[.15em] uppercase text-theme3 block mb-1">Email</label>
+                <input id="signupEmail" type="email" placeholder="you@example.com"
+                    class="w-full bg-theme border border-theme rounded-[7px] py-[.65rem] px-3 font-sans text-[.85rem] text-theme outline-none focus:border-accent theme-transition">
+            </div>
+            <div>
+                <label class="font-mono-dm text-[.62rem] tracking-[.15em] uppercase text-theme3 block mb-1">Password</label>
+                <input id="signupPassword" type="password" placeholder="Min 8 characters"
+                    class="w-full bg-theme border border-theme rounded-[7px] py-[.65rem] px-3 font-sans text-[.85rem] text-theme outline-none focus:border-accent theme-transition">
+            </div>
+            <p id="signupError" class="text-red-400 text-[.75rem] hidden"></p>
+            <button id="signupSubmit"
+                class="w-full bg-accent text-white border-none py-[.85rem] font-sans text-[.73rem] font-medium tracking-[.12em] uppercase rounded-[7px] cursor-pointer transition-all hover:bg-ac2">
+                Create Account
+            </button>
+        </div>
+
+    </div>
+</div>
+
+{{-- =====================================================
+     CHECKOUT MODAL
+====================================================== --}}
+<div id="checkoutModal"
+    class="fixed inset-0 bg-black/70 backdrop-blur-modal z-[400] hidden items-center justify-center p-5">
+    <div class="bg-theme2 border border-bdr2 rounded-[14px] w-full max-w-[560px] max-h-[92vh] overflow-y-auto p-8 relative theme-transition">
+
+        <button id="closeCheckoutModal"
+            class="absolute top-3 right-3 w-[30px] h-[30px] rounded-full border border-theme bg-theme2 text-theme2 cursor-pointer flex items-center justify-center hover:border-accent hover:text-accent theme-transition">
+            ✕
+        </button>
+
+        <h2 class="font-display text-[1.6rem] font-light text-theme mb-1">Checkout</h2>
+        <p class="font-mono-dm text-[.62rem] tracking-[.1em] uppercase text-theme3 mb-6">Delivery Information</p>
+
+        <div class="space-y-4">
+
+            {{-- Name + Phone --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="font-mono-dm text-[.62rem] tracking-[.15em] uppercase text-theme3 block mb-1">Full Name *</label>
+                    <input id="co_name" type="text" placeholder="Delivery name"
+                        class="w-full bg-theme border border-theme rounded-[7px] py-[.65rem] px-3 font-sans text-[.85rem] text-theme outline-none focus:border-accent theme-transition">
+                </div>
+                <div>
+                    <label class="font-mono-dm text-[.62rem] tracking-[.15em] uppercase text-theme3 block mb-1">Phone *</label>
+                    <input id="co_phone" type="tel" placeholder="e.g. 0244000000"
+                        class="w-full bg-theme border border-theme rounded-[7px] py-[.65rem] px-3 font-sans text-[.85rem] text-theme outline-none focus:border-accent theme-transition">
+                </div>
+            </div>
+
+            {{-- Address --}}
+            <div>
+                <label class="font-mono-dm text-[.62rem] tracking-[.15em] uppercase text-theme3 block mb-1">Delivery Address *</label>
+                <input id="co_address" type="text" placeholder="Street / area"
+                    class="w-full bg-theme border border-theme rounded-[7px] py-[.65rem] px-3 font-sans text-[.85rem] text-theme outline-none focus:border-accent theme-transition">
+            </div>
+
+            {{-- City + Region --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="font-mono-dm text-[.62rem] tracking-[.15em] uppercase text-theme3 block mb-1">City *</label>
+                    <input id="co_city" type="text" placeholder="e.g. Accra"
+                        class="w-full bg-theme border border-theme rounded-[7px] py-[.65rem] px-3 font-sans text-[.85rem] text-theme outline-none focus:border-accent theme-transition">
+                </div>
+                <div>
+                    <label class="font-mono-dm text-[.62rem] tracking-[.15em] uppercase text-theme3 block mb-1">Region *</label>
+                    <select id="co_region"
+                        class="w-full bg-theme border border-theme rounded-[7px] py-[.65rem] px-3 font-sans text-[.85rem] text-theme outline-none focus:border-accent theme-transition">
+                        <option value="">Select region</option>
+                        <option>Greater Accra</option>
+                        <option>Ashanti</option>
+                        <option>Western</option>
+                        <option>Eastern</option>
+                        <option>Central</option>
+                        <option>Northern</option>
+                        <option>Upper East</option>
+                        <option>Upper West</option>
+                        <option>Volta</option>
+                        <option>Brong-Ahafo</option>
+                        <option>Oti</option>
+                        <option>Bono</option>
+                        <option>Bono East</option>
+                        <option>Ahafo</option>
+                        <option>Savannah</option>
+                        <option>North East</option>
+                        <option>Western North</option>
+                    </select>
+                </div>
+            </div>
+
+            {{-- Ghana Post GPS + Landmark --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="font-mono-dm text-[.62rem] tracking-[.15em] uppercase text-theme3 block mb-1">Ghana Post GPS</label>
+                    <input id="co_gps" type="text" placeholder="e.g. GA-123-4567"
+                        class="w-full bg-theme border border-theme rounded-[7px] py-[.65rem] px-3 font-sans text-[.85rem] text-theme outline-none focus:border-accent theme-transition">
+                </div>
+                <div>
+                    <label class="font-mono-dm text-[.62rem] tracking-[.15em] uppercase text-theme3 block mb-1">Nearest Landmark</label>
+                    <input id="co_landmark" type="text" placeholder="e.g. Near Accra Mall"
+                        class="w-full bg-theme border border-theme rounded-[7px] py-[.65rem] px-3 font-sans text-[.85rem] text-theme outline-none focus:border-accent theme-transition">
+                </div>
+            </div>
+
+            {{-- Notes --}}
+            <div>
+                <label class="font-mono-dm text-[.62rem] tracking-[.15em] uppercase text-theme3 block mb-1">Order Notes</label>
+                <textarea id="co_notes" rows="2" placeholder="Any special instructions…"
+                    class="w-full bg-theme border border-theme rounded-[7px] py-[.65rem] px-3 font-sans text-[.85rem] text-theme outline-none focus:border-accent theme-transition resize-none"></textarea>
+            </div>
+
+            {{-- Payment Method --}}
+            <div>
+                <label class="font-mono-dm text-[.62rem] tracking-[.15em] uppercase text-theme3 block mb-2">Payment Method *</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <label class="payment-opt flex flex-col items-center gap-1 border border-theme rounded-[7px] py-3 px-2 cursor-pointer text-center transition-all hover:border-accent theme-transition">
+                        <input type="radio" name="payment_method" value="cash_on_delivery" class="hidden" checked>
+                        <span class="text-[1.1rem]">💵</span>
+                        <span class="font-mono-dm text-[.58rem] tracking-[.08em] uppercase text-theme2">Cash on Delivery</span>
+                    </label>
+                    <label class="payment-opt flex flex-col items-center gap-1 border border-theme rounded-[7px] py-3 px-2 cursor-pointer text-center transition-all hover:border-accent theme-transition">
+                        <input type="radio" name="payment_method" value="mobile_money" class="hidden">
+                        <span class="text-[1.1rem]">📱</span>
+                        <span class="font-mono-dm text-[.58rem] tracking-[.08em] uppercase text-theme2">Mobile Money</span>
+                    </label>
+                    <label class="payment-opt flex flex-col items-center gap-1 border border-theme rounded-[7px] py-3 px-2 cursor-pointer text-center transition-all hover:border-accent theme-transition">
+                        <input type="radio" name="payment_method" value="paystack" class="hidden">
+                        <span class="text-[1.1rem]">💳</span>
+                        <span class="font-mono-dm text-[.58rem] tracking-[.08em] uppercase text-theme2">Paystack</span>
+                    </label>
+                </div>
+            </div>
+
+            {{-- Order Summary --}}
+            <div class="border-t border-theme pt-4 mt-2">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="font-mono-dm text-[.65rem] uppercase tracking-[.1em] text-theme3">Items</span>
+                    <span id="co_item_count" class="font-mono-dm text-[.75rem] text-theme2"></span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="font-mono-dm text-[.65rem] uppercase tracking-[.1em] text-theme3">Total</span>
+                    <span id="co_total" class="font-display text-[1.3rem] text-theme"></span>
+                </div>
+            </div>
+
+            <p id="checkoutError" class="text-red-400 text-[.75rem] hidden"></p>
+
+            <button id="placeOrderBtn"
+                class="w-full bg-accent text-white border-none py-[.85rem] font-sans text-[.73rem] font-medium tracking-[.12em] uppercase rounded-[7px] cursor-pointer transition-all hover:bg-ac2 mt-2">
+                Place Order
+            </button>
+
+        </div>
+    </div>
+</div>
 
     
 </body>

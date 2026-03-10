@@ -13,6 +13,15 @@ class Order extends Model
         'user_id',
         'total_amount',
         'status',
+        'payment_status',  
+        'delivery_phone',
+        'delivery_address',
+        'city',
+        'region',
+        'ghana_post_gps',
+        'landmark',
+        'notes',
+        'payment_method'
     ];
 
     // An order belongs to a user

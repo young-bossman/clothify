@@ -582,6 +582,189 @@ document.addEventListener('DOMContentLoaded', () => {
         }`;
     document.head.appendChild(animStyle);
 
+
+
+/* =========================================================
+   AUTH MODAL (checkout gate)
+========================================================= */
+const authModal      = document.getElementById('authModal');
+const checkoutModal  = document.getElementById('checkoutModal');
+
+const openAuthModal     = () => { authModal.classList.remove('hidden');     authModal.classList.add('flex'); };
+const closeAuthModal    = () => { authModal.classList.add('hidden');         authModal.classList.remove('flex'); };
+const openCheckoutModal = () => { checkoutModal.classList.remove('hidden'); checkoutModal.classList.add('flex'); };
+const closeCheckoutModal= () => { checkoutModal.classList.add('hidden');    checkoutModal.classList.remove('flex'); };
+
+document.getElementById('closeAuthModal').addEventListener('click', closeAuthModal);
+document.getElementById('closeCheckoutModal').addEventListener('click', closeCheckoutModal);
+
+authModal.addEventListener('click',     (e) => { if (e.target === authModal)     closeAuthModal(); });
+checkoutModal.addEventListener('click', (e) => { if (e.target === checkoutModal) closeCheckoutModal(); });
+
+// Tab switching
+const tabLogin  = document.getElementById('tabLogin');
+const tabSignup = document.getElementById('tabSignup');
+
+tabLogin.addEventListener('click', () => {
+    document.getElementById('loginForm').classList.remove('hidden');
+    document.getElementById('signupForm').classList.add('hidden');
+    tabLogin.classList.add('text-accent', 'border-accent');
+    tabLogin.classList.remove('text-theme2', 'border-transparent');
+    tabSignup.classList.add('text-theme2', 'border-transparent');
+    tabSignup.classList.remove('text-accent', 'border-accent');
+});
+
+tabSignup.addEventListener('click', () => {
+    document.getElementById('signupForm').classList.remove('hidden');
+    document.getElementById('loginForm').classList.add('hidden');
+    tabSignup.classList.add('text-accent', 'border-accent');
+    tabSignup.classList.remove('text-theme2', 'border-transparent');
+    tabLogin.classList.add('text-theme2', 'border-transparent');
+    tabLogin.classList.remove('text-accent', 'border-accent');
+});
+
+// Login submit
+document.getElementById('loginSubmit').addEventListener('click', async () => {
+    const email    = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const errorEl  = document.getElementById('loginError');
+    errorEl.classList.add('hidden');
+
+    try {
+        const res  = await fetch(`${baseUrl}/api/v1/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Login failed');
+
+        localStorage.setItem('customer_token', data.token);
+        closeAuthModal();
+        openCheckoutModal();
+        populateCheckoutSummary();
+    } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.classList.remove('hidden');
+    }
+});
+
+// Signup submit
+document.getElementById('signupSubmit').addEventListener('click', async () => {
+    const name     = document.getElementById('signupName').value.trim();
+    const email    = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPassword').value;
+    const errorEl  = document.getElementById('signupError');
+    errorEl.classList.add('hidden');
+
+    try {
+        const res  = await fetch(`${baseUrl}/api/v1/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({ name, email, password, password_confirmation: password }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(Object.values(data.errors ?? {})[0]?.[0] || data.message || 'Registration failed');
+
+        localStorage.setItem('customer_token', data.token);
+        closeAuthModal();
+        openCheckoutModal();
+        populateCheckoutSummary();
+    } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.classList.remove('hidden');
+    }
+});
+
+/* =========================================================
+   CHECKOUT
+========================================================= */
+const populateCheckoutSummary = () => {
+    document.getElementById('co_item_count').textContent = `${cartCount()} item${cartCount() !== 1 ? 's' : ''}`;
+    document.getElementById('co_total').textContent      = `GHS ${cartTotal().toFixed(2)}`;
+};
+
+// Payment method visual selection
+document.querySelectorAll('.payment-opt').forEach(label => {
+    label.addEventListener('click', () => {
+        document.querySelectorAll('.payment-opt').forEach(l => {
+            l.classList.remove('border-accent', 'bg-theme3');
+        });
+        label.classList.add('border-accent', 'bg-theme3');
+    });
+});
+
+// Default highlight cash on delivery
+document.querySelector('.payment-opt')?.classList.add('border-accent', 'bg-theme3');
+
+// "Proceed to Checkout" button in cart drawer
+document.getElementById('checkoutBtn').addEventListener('click', () => {
+    if (!cart.length) { showToast('Your cart is empty'); return; }
+
+    const customerToken = localStorage.getItem('customer_token');
+    if (!customerToken) {
+        closeCart();
+        setTimeout(() => openAuthModal(), 320);
+    } else {
+        closeCart();
+        setTimeout(() => {
+            openCheckoutModal();
+            populateCheckoutSummary();
+        }, 320);
+    }
+});
+
+// Place order
+document.getElementById('placeOrderBtn').addEventListener('click', async () => {
+    const customerToken = localStorage.getItem('customer_token');
+    if (!customerToken) { openAuthModal(); return; }
+
+    const errorEl = document.getElementById('checkoutError');
+    errorEl.classList.add('hidden');
+
+    const paymentMethod = document.querySelector('input[name="payment_method"]:checked')?.value || 'cash_on_delivery';
+
+    const payload = {
+        delivery_name:    document.getElementById('co_name').value.trim(),
+        delivery_phone:   document.getElementById('co_phone').value.trim(),
+        delivery_address: document.getElementById('co_address').value.trim(),
+        city:             document.getElementById('co_city').value.trim(),
+        region:           document.getElementById('co_region').value,
+        ghana_post_gps:   document.getElementById('co_gps').value.trim(),
+        landmark:         document.getElementById('co_landmark').value.trim(),
+        notes:            document.getElementById('co_notes').value.trim(),
+        payment_method:   paymentMethod,
+        items:            cart.map(i => ({ id: i.id, name: i.name, price: i.price, qty: i.qty })),
+    };
+
+    try {
+        const res  = await fetch(`${baseUrl}/api/v1/orders`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                Authorization: `Bearer ${customerToken}`,
+            },
+            body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(Object.values(data.errors ?? {})[0]?.[0] || data.message || 'Order failed');
+
+        // Success — clear cart
+        cart = [];
+        saveCart();
+        updateCartBadge();
+        renderCart();
+        closeCheckoutModal();
+        showToast(`Order #${data.id} placed successfully!`);
+
+    } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.classList.remove('hidden');
+    }
+});
+
     /* =========================================================
        INITIAL LOAD
     ========================================================= */

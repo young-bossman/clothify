@@ -31,3 +31,5 @@ Route::get('/products', function () {
  Route::get('/shop', function () {
     return view('shop');
             })->name('shop');
+// Admin product management
+            Route::get('/orders', fn() => view('orders'))->name('orders');

@@ -9,7 +9,8 @@
         <nav class="space-y-4">
             <a href="{{ route('dashboard') }}" class="block text-gray-300 hover:text-white">Dashboard</a>
             <a href="{{ route('products') }}" class="block text-white font-semibold">Products</a>
-            <a href="#" class="block text-gray-300 hover:text-white">Orders</a>
+            <a href="{{ route('orders') }}" class="block text-gray-300 hover:text-white">Orders</a>
+            <a href="{{ route('shop') }}" class="block text-gray-300 hover:text-white">Online Shop</a>
 
             <button id="logoutBtn" class="mt-10 w-full text-left text-red-400 hover:text-red-500">
                 Logout

@@ -12,6 +12,7 @@ export default defineConfig({
                 'resources/js/dashboard.js',
                 'resources/js/products.js',
                 'resources/js/shop.js',
+                'resources/js/orders.js',
             ],
             refresh: true,
         }),

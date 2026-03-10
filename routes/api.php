@@ -6,6 +6,8 @@ use App\Http\Controllers\API\V1\AuthController;
 use App\Http\Controllers\API\V1\ProductController;
 use App\Http\Controllers\API\V1\ProductVariantController;
 use App\Http\Controllers\API\V1\CategoryController;
+use App\Http\Controllers\API\V1\StatsController;
+use App\Http\Controllers\API\V1\OrderController;
 
 Route::prefix('v1')->group(function () {
 
@@ -54,6 +56,23 @@ Route::prefix('v1')->group(function () {
         Route::post('/categories',              [CategoryController::class, 'store']);
         Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
 
+
+        // Stats — admin dashboard data
+        Route::get('/stats', [StatsController::class, 'index']);
+
+
+
+
+        // Orders — admin order management
+
+        Route::get('/orders',                              [OrderController::class, 'index']);
+        Route::get('/orders/{order}',                      [OrderController::class, 'show']);
+        Route::patch('/orders/{order}/status',             [OrderController::class, 'updateStatus']);
+        Route::patch('/orders/{order}/payment-status',     [OrderController::class, 'updatePaymentStatus']);
+        Route::delete('/orders/{order}',                   [OrderController::class, 'destroy']);
+
+// Orders — storefront order placement (auth added)
+        Route::post('/orders', [OrderController::class, 'store']);
     });
 
 });
