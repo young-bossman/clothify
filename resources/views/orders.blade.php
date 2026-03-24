@@ -122,6 +122,6 @@
     </div>
 </div>
 
-@vite('resources/js/orders.js')
+@vite('resources/js/order.js')
 
 </x-app>

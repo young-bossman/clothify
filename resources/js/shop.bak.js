@@ -773,10 +773,5 @@ document.getElementById('placeOrderBtn').addEventListener('click', async () => {
     loadCategories();
     loadProducts();
 
-
-
-
-
-
     
 });

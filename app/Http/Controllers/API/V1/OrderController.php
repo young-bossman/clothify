@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Http\Request;
 
-    use App\Models\OrderItem;
+use App\Models\OrderItem;
 use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
@@ -81,6 +81,7 @@ public function store(Request $request)
         'items.*.name'     => 'required|string',
         'items.*.price'    => 'required|numeric|min:0',
         'items.*.qty'      => 'required|integer|min:1',
+        'items.*.variant_id' => 'required|integer|exists:product_variants,id',
     ]);
 
     $items       = $request->items;
@@ -106,7 +107,7 @@ public function store(Request $request)
         foreach ($items as $item) {
             OrderItem::create([
                 'order_id'           => $order->id,
-                'product_variant_id' => 1, // TODO: replace with real variant_id when variants wired to cart
+                'product_variant_id' => $item['variant_id'], // TODO: replace with real variant_id when variants wired to cart
                 'quantity'           => $item['qty'],
                 'price_at_purchase'  => $item['price'],
                 'cost_at_purchase'   => 0, // TODO: pull from product cost_price when available

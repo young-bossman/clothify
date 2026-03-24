@@ -6,8 +6,9 @@
     <title>Clothify — Shop</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-    @vite(['resources/css/app.css', 'resources/css/shop.css', 'resources/js/shop.js'])
+    @vite(['resources/css/app.css', 'resources/css/shop.css', 'resources/js/shop/main.js'])
 </head>
+
 <body class="bg-theme text-theme theme-transition overflow-x-hidden">
 
     {{-- =====================================================

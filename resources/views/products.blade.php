@@ -191,6 +191,6 @@
 
 
 {{-- JS --}}
-@vite('resources/js/products.js')
+@vite('resources/js/products/main.js')
 
 </x-app>

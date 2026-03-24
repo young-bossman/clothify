@@ -99,6 +99,14 @@ class ProductController extends Controller
 
             $product = Product::create($validated);
 
+            // Auto-create a default variant linked to this product
+                \App\Models\ProductVariant::create([
+                    'product_id'     => $product->id,
+                    'size'           => 'Default',
+                    'color'          => 'Default',
+                    'stock_quantity' => $validated['stock_quantity'],
+                ]);
+
             // Record initial stock movement if stock > 0
             if ($product->stock_quantity > 0) {
                 StockMovement::create([

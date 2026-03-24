@@ -88,6 +88,6 @@
     </main>
 </div>
 
-@vite('resources/js/dashboard.js')
+@vite('resources/js/dashboard/main.js')
 
 </x-app>
