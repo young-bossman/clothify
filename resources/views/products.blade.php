@@ -189,6 +189,43 @@
 </div>
 
 
+{{-- ================= VARIANTS MODAL ================= --}}
+
+<div id="variantsModal" class="hidden fixed inset-0 bg-black/60 z-50 items-center justify-center">
+    <div class="bg-gray-800 p-6 rounded-lg w-[560px] max-h-[90vh] overflow-y-auto space-y-4">
+        <div class="flex justify-between items-center">
+            <h2 class="text-lg font-bold" id="variantsModalTitle">Variants</h2>
+            <button id="closeVariantsModal" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+        </div>
+
+        <!-- Variants table -->
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="text-gray-400 border-b border-gray-700 text-xs uppercase">
+                    <th class="py-2 px-2 text-left">Size</th>
+                    <th class="py-2 px-2 text-left">Color</th>
+                    <th class="py-2 px-2 text-left">Stock</th>
+                    <th class="py-2 px-2"></th>
+                    <th class="py-2 px-2"></th>
+                </tr>
+            </thead>
+            <tbody id="variantsList"></tbody>
+        </table>
+
+        <!-- Add new variant -->
+        <form id="variantForm" class="border-t border-gray-700 pt-4 space-y-2">
+            <p class="text-sm text-gray-400 font-semibold">Add new variant</p>
+            <div class="flex gap-2">
+                <input id="newVariantSize"  placeholder="Size"  class="flex-1 p-2 text-sm bg-gray-700 rounded" required>
+                <input id="newVariantColor" placeholder="Color" class="flex-1 p-2 text-sm bg-gray-700 rounded" required>
+                <input id="newVariantStock" type="number" min="0" placeholder="Stock" class="w-24 p-2 text-sm bg-gray-700 rounded" required>
+                <button type="submit" class="bg-indigo-600 px-3 py-2 text-sm rounded hover:bg-indigo-700">Add</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
 
 {{-- JS --}}
 @vite('resources/js/products/main.js')

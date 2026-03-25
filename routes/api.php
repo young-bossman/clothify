@@ -50,7 +50,10 @@ Route::prefix('v1')->group(function () {
         Route::post('/products/{product}/adjust-stock',   [ProductController::class, 'adjustStock']);
 
         // Product variants
-        Route::post('/product-variants', [ProductVariantController::class, 'store']);
+        Route::get('/products/{product}/variants',                    [ProductVariantController::class, 'index']);
+        Route::post('/products/{product}/variants',                   [ProductVariantController::class, 'store']);
+        Route::patch('/products/{product}/variants/{variant}',        [ProductVariantController::class, 'update']);
+        Route::delete('/products/{product}/variants/{variant}',       [ProductVariantController::class, 'destroy']);
 
         // Categories — write operations (admin only)
         Route::post('/categories',              [CategoryController::class, 'store']);

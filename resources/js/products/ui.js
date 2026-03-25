@@ -40,6 +40,7 @@ export const dom = {
     editImagePreview:     document.getElementById('editImagePreview'),
     editImageText:        document.getElementById('editImageText'),
     logoutBtn:            document.getElementById('logoutBtn'),
+    variantsModal: document.getElementById('variantsModal'),
 };
 
 /* =========================================================
@@ -179,6 +180,7 @@ export const renderProductRows = (products, baseUrl, productsTable) => {
                 <td class="py-2 px-2 max-w-[120px] truncate">${p.description ?? ''}</td>
                 <td class="py-2 px-2 ${p.is_active ? 'text-green-400' : 'text-red-400'}">${p.is_active ? 'Active' : 'Inactive'}</td>
                 <td class="py-2 px-2 text-right space-x-3">
+                    <button class="variantsBtn text-green-400" data-id="${p.id}" data-name="${p.name}">Variants</button>
                     <button class="editBtn text-indigo-400" data-id="${p.id}">Edit</button>
                     <button class="deleteBtn text-red-400" data-id="${p.id}">Delete</button>
                 </td>

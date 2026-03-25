@@ -10,7 +10,11 @@
  *   4. Trigger initial data load
  */
 
-import { init, loadCategories, loadProducts, bindLogout, bindCreateImageUpload, bindEditImageUpload, bindCategoryToggles, bindCreateProduct, bindUpdateProduct, bindFilters } from './handlers.js';
+import { init, loadCategories, loadProducts, 
+   bindLogout, bindCreateImageUpload, 
+   bindEditImageUpload, bindCategoryToggles, 
+   bindCreateProduct, bindUpdateProduct, 
+   bindFilters, bindVariants } from './handlers.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -44,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     bindCreateProduct();
     bindUpdateProduct();
     bindFilters();
+    bindVariants();
 
     /* =========================================================
        INITIAL DATA LOAD

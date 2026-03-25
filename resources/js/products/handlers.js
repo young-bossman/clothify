@@ -14,6 +14,10 @@ import {
     updateProduct,
     deleteProduct,
     logoutRequest,
+    fetchVariants,
+    createVariant,
+    updateVariant,
+    deleteVariant,
 } from './api.js';
 
 import {
@@ -399,5 +403,106 @@ export const bindUpdateProduct = () => {
 export const bindFilters = () => {
     [dom.searchInput, dom.statusFilter, dom.sortSelect, dom.categoryFilter].forEach(el => {
         el?.addEventListener('input', () => { currentPage = 1; loadProducts(); });
+    });
+};
+
+// Additional handlers for variants, stock movements, etc. can be added here as needed.
+export const bindVariants = () => {
+    let currentProductId = null;
+
+    const modal        = document.getElementById('variantsModal');
+    const modalTitle   = document.getElementById('variantsModalTitle');
+    const variantsList = document.getElementById('variantsList');
+    const variantForm  = document.getElementById('variantForm');
+    const closeBtn     = document.getElementById('closeVariantsModal');
+
+    const loadVariants = async () => {
+        variantsList.innerHTML = `<tr><td colspan="5" class="text-center text-gray-400 py-4">Loading...</td></tr>`;
+        const variants = await fetchVariants({ ...ctx, productId: currentProductId });
+
+        if (!variants.length) {
+            variantsList.innerHTML = `<tr><td colspan="5" class="text-center text-gray-400 py-4">No variants yet.</td></tr>`;
+            return;
+        }
+
+        variantsList.innerHTML = variants.map(v => `
+            <tr class="border-b border-gray-700 text-sm" data-variant-id="${v.id}">
+                <td class="py-2 px-2">
+                    <input class="bg-gray-700 rounded p-1 w-20 variantSize" value="${v.size}">
+                </td>
+                <td class="py-2 px-2">
+                    <input class="bg-gray-700 rounded p-1 w-24 variantColor" value="${v.color}">
+                </td>
+                <td class="py-2 px-2">
+                    <input type="number" class="bg-gray-700 rounded p-1 w-20 variantStock" value="${v.stock_quantity}">
+                </td>
+                <td class="py-2 px-2">
+                    <button class="saveVariantBtn text-indigo-400 text-xs" data-id="${v.id}">Save</button>
+                </td>
+                <td class="py-2 px-2">
+                    <button class="deleteVariantBtn text-red-400 text-xs" data-id="${v.id}">Delete</button>
+                </td>
+            </tr>
+        `).join('');
+
+        // Save variant
+        variantsList.querySelectorAll('.saveVariantBtn').forEach(btn => {
+            btn.onclick = async () => {
+                const row  = variantsList.querySelector(`tr[data-variant-id="${btn.dataset.id}"]`);
+                const data = {
+                    size:           row.querySelector('.variantSize').value,
+                    color:          row.querySelector('.variantColor').value,
+                    stock_quantity: parseInt(row.querySelector('.variantStock').value),
+                };
+                await updateVariant({ ...ctx, productId: currentProductId, variantId: btn.dataset.id, data });
+                showToast('Variant updated.');
+                loadVariants();
+            };
+        });
+
+        // Delete variant
+        variantsList.querySelectorAll('.deleteVariantBtn').forEach(btn => {
+            btn.onclick = async () => {
+                if (!confirm('Delete this variant?')) return;
+                await deleteVariant({ ...ctx, productId: currentProductId, variantId: btn.dataset.id });
+                showToast('Variant deleted.');
+                loadVariants();
+            };
+        });
+    };
+
+    // Open modal
+    document.addEventListener('click', async e => {
+        const btn = e.target.closest('.variantsBtn');
+        if (!btn) return;
+        currentProductId       = btn.dataset.id;
+        modalTitle.textContent = `Variants — ${btn.dataset.name}`;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        await loadVariants();
+    });
+
+    // Add new variant
+    variantForm?.addEventListener('submit', async e => {
+        e.preventDefault();
+        const data = {
+            size:           document.getElementById('newVariantSize').value,
+            color:          document.getElementById('newVariantColor').value,
+            stock_quantity: parseInt(document.getElementById('newVariantStock').value),
+        };
+        const res = await createVariant({ ...ctx, productId: currentProductId, data });
+        if (res.ok) {
+            showToast('Variant added.');
+            variantForm.reset();
+            loadVariants();
+        } else {
+            showToast('Failed to add variant.', 'error');
+        }
+    });
+
+    // Close modal
+    closeBtn?.addEventListener('click', () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
     });
 };
