@@ -10,7 +10,17 @@ Add your screenshots to `docs/screenshots/` and update the image paths below.
 
 | Storefront | Product Management |
 | --- | --- |
-| <img width="1600" height="809" alt="clothify storefront" src="https://github.com/user-attachments/assets/07608c15-206c-4218-8af5-06eaf360fa46" />
+| <img width="1600" height="815" alt="clothify login pic" src="https://github.com/user-attachments/assets/bc5774fb-18c2-452a-9527-97a85219afef" />
+
+<img width="1600" height="809" alt="clothify storefront" src="https://github.com/user-attachments/assets/07608c15-206c-4218-8af5-06eaf360fa46" />
+<img width="1600" height="771" alt="storefront products" src="https://github.com/user-attachments/assets/0a77e6b0-e4f3-47ee-89f4-6b08f1fa5d56" />
+<img width="1600" height="779" alt="storefront sd" src="https://github.com/user-attachments/assets/d02b442c-b67f-4ee5-a0b4-bf49ca6f67bd" />
+<img width="1600" height="793" alt="storefront darkmode" src="https://github.com/user-attachments/assets/3bf2bfd4-9dc2-4f79-9118-3d67dd2832d5" />
+<img width="1600" height="783" alt="storefront darkmode sd" src="https://github.com/user-attachments/assets/a9456ccd-1f4a-4360-9174-42728703b8d5" />
+
+
+
+
  |<img width="1600" height="808" alt="clothify productspage pic" src="https://github.com/user-attachments/assets/46a22302-429e-4296-b676-bfee19af26d8" />
  |
 
