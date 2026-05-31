@@ -4,34 +4,77 @@ Clothify is a full-stack e-commerce application built with Laravel, Sanctum, Bla
 
 The project is designed as an API-first Laravel app: Blade renders the main screens, while modular JavaScript talks to versioned API endpoints under `/api/v1`.
 
-## Preview
+## 📸 Preview
 
+### 🔐 Authentication
 
-| Storefront | Product Management |
-| --- | --- |
-| <img width="1600" height="815" alt="clothify login pic" src="https://github.com/user-attachments/assets/bc5774fb-18c2-452a-9527-97a85219afef" />
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/bc5774fb-18c2-452a-9527-97a85219afef" alt="Login Page" width="900">
+</p>
 
-<img width="1600" height="809" alt="clothify storefront" src="https://github.com/user-attachments/assets/07608c15-206c-4218-8af5-06eaf360fa46" />
-<img width="1600" height="771" alt="storefront products" src="https://github.com/user-attachments/assets/0a77e6b0-e4f3-47ee-89f4-6b08f1fa5d56" />
-<img width="1600" height="779" alt="storefront sd" src="https://github.com/user-attachments/assets/d02b442c-b67f-4ee5-a0b4-bf49ca6f67bd" />
-<img width="1600" height="793" alt="storefront darkmode" src="https://github.com/user-attachments/assets/3bf2bfd4-9dc2-4f79-9118-3d67dd2832d5" />
-<img width="1600" height="783" alt="storefront darkmode sd" src="https://github.com/user-attachments/assets/a9456ccd-1f4a-4360-9174-42728703b8d5" />
-<img width="1580" height="866" alt="storefront darkmode active search" src="https://github.com/user-attachments/assets/0c6ee691-882f-49e1-9d31-590d1922f5c8" />
+---
 
+### 🛍️ Storefront
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/07608c15-206c-4218-8af5-06eaf360fa46" alt="Storefront" width="900">
+</p>
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/0a77e6b0-e4f3-47ee-89f4-6b08f1fa5d56" alt="Products Listing" width="900">
+</p>
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/d02b442c-b67f-4ee5-a0b4-bf49ca6f67bd" alt="Storefront Search" width="900">
+</p>
 
- |<img width="1600" height="808" alt="clothify productspage pic" src="https://github.com/user-attachments/assets/46a22302-429e-4296-b676-bfee19af26d8" />
- <img width="1600" height="816" alt="clothify orderspagepic" src="https://github.com/user-attachments/assets/4cebf67f-7d42-406e-a952-081b5afeef4b" />
+---
 
- |
+### 🌙 Dark Mode
 
-| Dashboard | Checkout |
-| --- | --- |
-| <img width="1600" height="810" alt="clothify dashboardpic" src="https://github.com/user-attachments/assets/af328dfb-fefe-4ba4-b33f-8e43f7a92362" />
- |  <img width="1600" height="759" alt="storefront darkmode activecheckout" src="https://github.com/user-attachments/assets/b6be93b8-afae-4842-92cf-db84c5f93766" />
-|
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/3bf2bfd4-9dc2-4f79-9118-3d67dd2832d5" alt="Dark Mode Home" width="900">
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/a9456ccd-1f4a-4360-9174-42728703b8d5" alt="Dark Mode Search" width="900">
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/0c6ee691-882f-49e1-9d31-590d1922f5c8" alt="Dark Mode Active Search" width="900">
+</p>
+
+---
+
+### 📦 Product Management
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/46a22302-429e-4296-b676-bfee19af26d8" alt="Products Management" width="900">
+</p>
+
+---
+
+### 🧾 Orders Management
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/4cebf67f-7d42-406e-a952-081b5afeef4b" alt="Orders Page" width="900">
+</p>
+
+---
+
+### 📊 Admin Dashboard
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/af328dfb-fefe-4ba4-b33f-8e43f7a92362" alt="Dashboard" width="900">
+</p>
+
+---
+
+### 💳 Checkout
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/b6be93b8-afae-4842-92cf-db84c5f93766" alt="Checkout Page" width="900">
+</p>
 
 ## Features
 
