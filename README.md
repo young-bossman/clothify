@@ -1,61 +1,251 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Clothify
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Clothify is a full-stack fashion e-commerce application built with Laravel, Sanctum, Blade, Vite, and Tailwind CSS. It combines a customer-facing storefront with an admin/staff dashboard for managing products, categories, stock, and orders.
 
-## About Laravel
+The project is designed as an API-first Laravel app: Blade renders the main screens, while modular JavaScript talks to versioned API endpoints under `/api/v1`.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Preview
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Add your screenshots to `docs/screenshots/` and update the image paths below.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+| Storefront | Product Management |
+| --- | --- |
+| ![Clothify storefront](docs/screenshots/storefront.png) | ![Clothify product management](docs/screenshots/products.png) |
 
-## Learning Laravel
+| Dashboard | Checkout |
+| --- | --- |
+| ![Clothify dashboard](docs/screenshots/dashboard.png) | ![Clothify checkout](docs/screenshots/checkout.png) |
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Features
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- Customer storefront with product browsing, search, category filtering, price filtering, sorting, pagination, and product detail modals
+- Shopping cart drawer with quantity updates and checkout flow
+- Delivery checkout fields tailored for Ghana, including region, landmark, and Ghana Post GPS support
+- User registration and login with Laravel Sanctum session authentication for the web
+- Optional mobile-style token authentication using an `X-Mobile-App` request header
+- Role-based access control for admin and staff dashboard routes
+- Admin dashboard with total products, total orders, revenue, low-stock counts, low-stock items, and recent orders
+- Product management with create, edit, delete, image upload, active/inactive state, categories, and variants
+- Stock adjustment endpoint with stock movement history support
+- Order management with filters, detail modal, status updates, payment status updates, and deletion
+- Docker setup with PHP, Nginx, MySQL, and phpMyAdmin
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Tech Stack
 
-## Laravel Sponsors
+- Backend: Laravel 12, PHP 8.2
+- Auth: Laravel Sanctum
+- Frontend: Blade, Vite, Tailwind CSS 4, vanilla JavaScript modules
+- Database: SQLite by default, MySQL through Docker
+- Tooling: Composer, npm, PHPUnit, Laravel Pint-ready dependencies
+- Containers: Docker Compose, Nginx, MySQL 8, phpMyAdmin
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Screens
 
-### Premium Partners
+- `/login` - user login
+- `/register` - customer registration
+- `/shop` - customer storefront
+- `/dashboard` - admin/staff overview dashboard
+- `/products` - admin/staff product and variant management
+- `/orders` - admin/staff order management
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## API Overview
 
-## Contributing
+All API routes are versioned under `/api/v1`.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Public
 
-## Code of Conduct
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `POST` | `/api/v1/register` | Create a customer account |
+| `POST` | `/api/v1/login` | Log in with session auth or mobile token auth |
+| `GET` | `/api/v1/products` | List products with filters, search, sorting, and pagination |
+| `GET` | `/api/v1/products/{product}` | Get product details with category and variants |
+| `GET` | `/api/v1/categories` | List product categories |
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Authenticated
 
-## Security Vulnerabilities
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `POST` | `/api/v1/logout` | Log out current user |
+| `GET` | `/api/v1/me` | Get the current user profile |
+| `POST` | `/api/v1/orders` | Place a customer order |
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Admin / Staff
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/api/v1/stats` | Dashboard metrics |
+| `POST` | `/api/v1/products` | Create a product |
+| `PUT` | `/api/v1/products/{product}` | Update a product |
+| `DELETE` | `/api/v1/products/{product}` | Delete a product |
+| `POST` | `/api/v1/products/{product}/adjust-stock` | Adjust stock and log movement |
+| `POST` | `/api/v1/product-variants` | Create a product variant |
+| `POST` | `/api/v1/categories` | Create a category |
+| `DELETE` | `/api/v1/categories/{category}` | Delete a category |
+| `GET` | `/api/v1/orders` | List orders |
+| `GET` | `/api/v1/orders/{order}` | View an order |
+| `PATCH` | `/api/v1/orders/{order}/status` | Update order status |
+| `PATCH` | `/api/v1/orders/{order}/payment-status` | Update payment status |
+| `DELETE` | `/api/v1/orders/{order}` | Delete an order |
+
+## Getting Started
+
+### Requirements
+
+- PHP 8.2 or higher
+- Composer
+- Node.js and npm
+- SQLite or MySQL
+- Docker Desktop, if using the container setup
+
+### Local Setup
+
+Clone the repository and install dependencies:
+
+```bash
+composer install
+npm install
+```
+
+Create the environment file and application key:
+
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+Create the SQLite database if you are using the default `.env.example` database settings:
+
+```bash
+touch database/database.sqlite
+```
+
+Run migrations:
+
+```bash
+php artisan migrate
+```
+
+Link public storage for product images:
+
+```bash
+php artisan storage:link
+```
+
+Start the app:
+
+```bash
+composer run dev
+```
+
+The Laravel server will run at `http://127.0.0.1:8000` and Vite will serve frontend assets.
+
+### Docker Setup
+
+Start the containers:
+
+```bash
+docker compose up -d --build
+```
+
+The app will be available at:
+
+- App: `http://localhost:8000`
+- phpMyAdmin: `http://localhost:8080`
+- MySQL host port: `3307`
+
+For Docker, use MySQL settings similar to:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=db
+DB_PORT=3306
+DB_DATABASE=ecommerce
+DB_USERNAME=root
+DB_PASSWORD=secret
+```
+
+Then run migrations inside the app container:
+
+```bash
+docker compose exec app php artisan migrate
+docker compose exec app php artisan storage:link
+```
+
+## Admin Account
+
+The project includes an `AdminSeeder` that reads credentials from `.env`.
+
+```env
+ADMIN_NAME="Admin User"
+ADMIN_EMAIL="admin@example.com"
+ADMIN_PASSWORD="use-a-strong-password"
+```
+
+The admin password must be at least 12 characters. After adding the values, run:
+
+```bash
+php artisan db:seed --class=AdminSeeder
+```
+
+or, with Docker:
+
+```bash
+docker compose exec app php artisan db:seed --class=AdminSeeder
+```
+
+After the first login, remove `ADMIN_PASSWORD` from `.env`.
+
+## Project Structure
+
+```text
+app/Http/Controllers/API/V1   Versioned API controllers
+app/Http/Middleware           Role-based access middleware
+app/Models                    Eloquent models for users, products, orders, variants, categories, and stock
+database/migrations           Database schema
+database/seeders              Seeders, including admin user setup
+resources/views               Blade pages and layout components
+resources/js                  Modular frontend JavaScript
+resources/css                 Tailwind and storefront styling
+routes/api.php                API routes
+routes/web.php                Blade page routes
+docker/                       PHP and Nginx container config
+```
+
+## Testing
+
+Run the test suite:
+
+```bash
+composer test
+```
+
+Build frontend assets:
+
+```bash
+npm run build
+```
+
+## Portfolio Notes
+
+To make the repository presentation stronger, add:
+
+- A hero screenshot of the storefront above the fold
+- A product grid screenshot showing filters and product cards
+- A cart or checkout modal screenshot
+- An admin dashboard screenshot with populated stats
+- A product management screenshot showing image upload, categories, and variants
+- A short demo GIF or screen recording linked near the top
+
+Recommended screenshot paths:
+
+```text
+docs/screenshots/storefront.png
+docs/screenshots/products.png
+docs/screenshots/dashboard.png
+docs/screenshots/checkout.png
+```
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is open-source under the MIT license.
