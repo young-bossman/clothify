@@ -1,4 +1,4 @@
- # Clothify
+s # Clothify
 
 Clothify is a full-stack e-commerce application built with Laravel, Sanctum, Blade, Vite, and Tailwind CSS. It combines a customer-facing storefront with an admin/staff dashboard for managing products, categories, stock, and orders.
 
@@ -10,11 +10,15 @@ Add your screenshots to `docs/screenshots/` and update the image paths below.
 
 | Storefront | Product Management |
 | --- | --- |
-| ![Clothify storefront](docs/screenshots/storefront.png) | ![Clothify product management](docs/screenshots/products.png) |
+| <img width="1600" height="809" alt="clothify storefront" src="https://github.com/user-attachments/assets/07608c15-206c-4218-8af5-06eaf360fa46" />
+ |<img width="1600" height="808" alt="clothify productspage pic" src="https://github.com/user-attachments/assets/46a22302-429e-4296-b676-bfee19af26d8" />
+ |
 
 | Dashboard | Checkout |
 | --- | --- |
-| ![Clothify dashboard](docs/screenshots/dashboard.png) | ![Clothify checkout](docs/screenshots/checkout.png) |
+| <img width="1600" height="810" alt="clothify dashboardpic" src="https://github.com/user-attachments/assets/af328dfb-fefe-4ba4-b33f-8e43f7a92362" />
+ |  <img width="1600" height="759" alt="storefront darkmode activecheckout" src="https://github.com/user-attachments/assets/b6be93b8-afae-4842-92cf-db84c5f93766" />
+|
 
 ## Features
 
