@@ -6,7 +6,6 @@ The project is designed as an API-first Laravel app: Blade renders the main scre
 
 ## Preview
 
-Add your screenshots to `docs/screenshots/` and update the image paths below.
 
 | Storefront | Product Management |
 | --- | --- |
@@ -244,25 +243,7 @@ Build frontend assets:
 npm run build
 ```
 
-## Portfolio Notes
 
-To make the repository presentation stronger, add:
-
-- A hero screenshot of the storefront above the fold
-- A product grid screenshot showing filters and product cards
-- A cart or checkout modal screenshot
-- An admin dashboard screenshot with populated stats
-- A product management screenshot showing image upload, categories, and variants
-- A short demo GIF or screen recording linked near the top
-
-Recommended screenshot paths:
-
-```text
-docs/screenshots/storefront.png
-docs/screenshots/products.png
-docs/screenshots/dashboard.png
-docs/screenshots/checkout.png
-```
 
 ## License
 
