@@ -17,11 +17,15 @@ Add your screenshots to `docs/screenshots/` and update the image paths below.
 <img width="1600" height="779" alt="storefront sd" src="https://github.com/user-attachments/assets/d02b442c-b67f-4ee5-a0b4-bf49ca6f67bd" />
 <img width="1600" height="793" alt="storefront darkmode" src="https://github.com/user-attachments/assets/3bf2bfd4-9dc2-4f79-9118-3d67dd2832d5" />
 <img width="1600" height="783" alt="storefront darkmode sd" src="https://github.com/user-attachments/assets/a9456ccd-1f4a-4360-9174-42728703b8d5" />
+<img width="1580" height="866" alt="storefront darkmode active search" src="https://github.com/user-attachments/assets/0c6ee691-882f-49e1-9d31-590d1922f5c8" />
+
 
 
 
 
  |<img width="1600" height="808" alt="clothify productspage pic" src="https://github.com/user-attachments/assets/46a22302-429e-4296-b676-bfee19af26d8" />
+ <img width="1600" height="816" alt="clothify orderspagepic" src="https://github.com/user-attachments/assets/4cebf67f-7d42-406e-a952-081b5afeef4b" />
+
  |
 
 | Dashboard | Checkout |
