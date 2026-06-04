@@ -208,7 +208,8 @@ export const quickAdd = async (id) => {
             product = await fetchProductById(baseUrl, id);
             productCache[id] = product;
         }
-        addToCart(product);
+        const variantId = product.variants?.[0]?.id ?? null;
+        addToCart({ ...product, variant_id: variantId });
         updateCartBadge();
         renderCart();
         showToast(`${product.name} added to cart`);
@@ -228,19 +229,19 @@ export const bindProductModal = () => {
     });
 
     document.getElementById('modalAddBtn').addEventListener('click', () => {
-        // currentProduct is tracked inside ui.js openProductModal;
-        // we re-read it from the modal's data attribute set during open
-        const name = document.getElementById('modalName').textContent;
-        const id   = parseInt(document.getElementById('modalAddBtn').dataset.productId);
-        const product = productCache[id];
-        if (product) {
-            addToCart(product);
-            updateCartBadge();
-            renderCart();
-            showToast(`${product.name} added to cart`);
-            closeProductModal();
-        }
-    });
+    const id      = parseInt(document.getElementById('modalAddBtn').dataset.productId);
+    const product = productCache[id];
+    if (!product) return;
+
+    const variantSelect = document.getElementById('variantSelect');
+    const variantId     = variantSelect ? parseInt(variantSelect.value) : (product.variants?.[0]?.id ?? null);
+
+    addToCart({ ...product, variant_id: variantId });
+    updateCartBadge();
+    renderCart();
+    showToast(`${product.name} added to cart`);
+    closeProductModal();
+});
 };
 
 /* =========================================================
@@ -397,8 +398,9 @@ export const bindCheckoutModal = () => {
             landmark:         document.getElementById('co_landmark').value.trim(),
             notes:            document.getElementById('co_notes').value.trim(),
             payment_method:   paymentMethod,
-            items:            getCart().map(i => ({ id: i.id, name: i.name, price: i.price, qty: i.qty })),
+            items: getCart().map(i => ({ id: i.id, variant_id: i.variant_id, name: i.name, price: i.price, qty: i.qty })),
         };
+        console.log(payload.items); // add this line to check the payload items
 
         try {
             const data = await placeOrderRequest(baseUrl, customerToken, payload);

@@ -47,8 +47,7 @@ return [
     |
     */
 
-    'expiration' => null,
-
+    'expiration' => null, // expiry is set per token in AuthController by role
     /*
     |--------------------------------------------------------------------------
     | Token Prefix

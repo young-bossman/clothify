@@ -319,6 +319,7 @@
                 <div id="modalSku" class="font-mono-dm text-[.58rem] text-theme3 tracking-[.1em] mb-4"></div>
                 <div id="modalPrice" class="font-display text-[1.8rem] font-normal text-theme mb-[.85rem]"></div>
                 <div id="modalStock" class="flex items-center gap-[.38rem] text-[.72rem] mb-[.9rem]"></div>
+                <div id="modalVariantSection" class="mb-2"></div>
                 <p id="modalDesc" class="text-[.8rem] text-theme2 leading-[1.75] flex-1 mb-6"></p>
                 <button id="modalAddBtn"
                     class="w-full bg-accent text-white border-none py-[.85rem] font-sans text-[.75rem] font-medium tracking-[.12em] uppercase rounded-lg cursor-pointer transition-all hover:bg-ac2 hover:-translate-y-px disabled:bg-bdr disabled:text-theme3 disabled:cursor-not-allowed disabled:translate-y-0">

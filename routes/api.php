@@ -11,71 +11,49 @@ use App\Http\Controllers\API\V1\OrderController;
 
 Route::prefix('v1')->group(function () {
 
-    // ----------------------------------------
-    // Public Auth Routes
-    // ----------------------------------------
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login',    [AuthController::class, 'login']);
+    // Public auth routes — web clients get session, mobile clients get Bearer tokens
+    // Ensure web middleware runs for these so session cookies are created for browser clients
+    Route::middleware('web')->post('/register', [AuthController::class, 'register']);
+    Route::middleware('web')->post('/login',    [AuthController::class, 'login']);
 
-    // ----------------------------------------
-    // Public Storefront Routes (no token needed)
-    // ----------------------------------------
-
-    // Products — index handles ?public=1 to filter active only
-    // show — customers need to view individual product detail
-    // categories — needed to populate filters and pills on storefront
+    // Public storefront reads — intentionally unauthenticated
     Route::get('/products',           [ProductController::class, 'index']);
     Route::get('/products/{product}', [ProductController::class, 'show']);
     Route::get('/categories',         [CategoryController::class, 'index']);
 
-    // ----------------------------------------
-    // Protected Routes (token required)
-    // ----------------------------------------
-    Route::middleware('auth:sanctum')->group(function () {
+    // Authenticated routes
+    Route::middleware(['auth:sanctum'])->group(function () {
 
         Route::post('/logout', [AuthController::class, 'logout']);
+        Route::get('/me',      [AuthController::class, 'me']);
 
-        Route::get('/me', function (Request $request) {
-            return response()->json([
-                'id'    => $request->user()->id,
-                'name'  => $request->user()->name,
-                'email' => $request->user()->email,
-            ]);
-        });
-
-        // Products — write operations (admin only)
-        Route::post('/products',                          [ProductController::class, 'store']);
-        Route::put('/products/{product}',                 [ProductController::class, 'update']);
-        Route::delete('/products/{product}',              [ProductController::class, 'destroy']);
-        Route::post('/products/{product}/adjust-stock',   [ProductController::class, 'adjustStock']);
-
-        // Product variants
-        Route::get('/products/{product}/variants',                    [ProductVariantController::class, 'index']);
-        Route::post('/products/{product}/variants',                   [ProductVariantController::class, 'store']);
-        Route::patch('/products/{product}/variants/{variant}',        [ProductVariantController::class, 'update']);
-        Route::delete('/products/{product}/variants/{variant}',       [ProductVariantController::class, 'destroy']);
-
-        // Categories — write operations (admin only)
-        Route::post('/categories',              [CategoryController::class, 'store']);
-        Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
-
-
-        // Stats — admin dashboard data
-        Route::get('/stats', [StatsController::class, 'index']);
-
-
-
-
-        // Orders — admin order management
-
-        Route::get('/orders',                              [OrderController::class, 'index']);
-        Route::get('/orders/{order}',                      [OrderController::class, 'show']);
-        Route::patch('/orders/{order}/status',             [OrderController::class, 'updateStatus']);
-        Route::patch('/orders/{order}/payment-status',     [OrderController::class, 'updatePaymentStatus']);
-        Route::delete('/orders/{order}',                   [OrderController::class, 'destroy']);
-
-// Orders — storefront order placement (auth added)
+        // Customer — any authenticated user can place orders
         Route::post('/orders', [OrderController::class, 'store']);
-    });
 
+        // Admin / Staff only
+        Route::middleware('admin')->group(function () {
+
+            Route::get('/stats', [StatsController::class, 'index']);
+
+            // Products
+            Route::post('/products',                        [ProductController::class, 'store']);
+            Route::put('/products/{product}',               [ProductController::class, 'update']);
+            Route::delete('/products/{product}',            [ProductController::class, 'destroy']);
+            Route::post('/products/{product}/adjust-stock', [ProductController::class, 'adjustStock']);
+
+            // Variants
+            Route::post('/product-variants', [ProductVariantController::class, 'store']);
+
+            // Categories
+            Route::post('/categories',              [CategoryController::class, 'store']);
+            Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
+
+            // Orders management
+            Route::get('/orders',                          [OrderController::class, 'index']);
+            Route::get('/orders/{order}',                  [OrderController::class, 'show']);
+            Route::patch('/orders/{order}/status',         [OrderController::class, 'updateStatus']);
+            Route::patch('/orders/{order}/payment-status', [OrderController::class, 'updatePaymentStatus']);
+            Route::delete('/orders/{order}',               [OrderController::class, 'destroy']);
+        });
+    });
 });

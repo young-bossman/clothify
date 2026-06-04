@@ -222,7 +222,26 @@ export const openProductModal = (product) => {
     }
 
     // Stamp the product id so handlers.js can look it up from the cache
-    addBtn.dataset.productId = product.id;
+    // Render variant selector
+const variantSection = document.getElementById('modalVariantSection');
+if (product.variants && product.variants.length > 0) {
+    const nonDefault = product.variants.filter(v => v.size !== 'Default' || v.color !== 'Default');
+    if (nonDefault.length > 0) {
+        variantSection.innerHTML = `
+            <div class="mb-4">
+                <label class="font-mono-dm text-[.62rem] tracking-[.15em] uppercase text-theme3 block mb-2">Select Variant</label>
+                <select id="variantSelect" class="w-full bg-theme border border-theme rounded-[7px] py-[.65rem] px-3 font-sans text-[.85rem] text-theme outline-none focus:border-accent theme-transition">
+                    ${product.variants.map(v => `<option value="${v.id}" data-stock="${v.stock_quantity}">${v.size} / ${v.color} — Stock: ${v.stock_quantity}</option>`).join('')}
+                </select>
+            </div>`;
+    } else {
+        variantSection.innerHTML = '';
+    }
+} else {
+    variantSection.innerHTML = '';
+}
+
+addBtn.dataset.productId = product.id;
 
     modalOverlay.classList.remove('opacity-0', 'pointer-events-none');
     modalOverlay.classList.add('opacity-100');

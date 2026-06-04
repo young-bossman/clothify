@@ -28,6 +28,7 @@ export const addToCart = (product) => {
     } else {
         cart.push({
             id:    product.id,
+            variant_id: product.variant_id ?? null,
             name:  product.name,
             price: parseFloat(product.price),
             image: product.image ?? null,

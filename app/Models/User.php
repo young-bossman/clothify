@@ -23,6 +23,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -53,4 +54,28 @@ class User extends Authenticatable
     return $this->hasMany(Order::class);
 }
 
+
+// Role helpers
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function isStaff(): bool
+    {
+        return $this->role === 'staff';
+    }
+
+    public function isCustomer(): bool
+    {
+        return $this->role === 'customer';
+    }
+
+    public function canAccessDashboard(): bool
+    {
+        return in_array($this->role, ['admin', 'staff'], true);
+    }
 }
+
+
+

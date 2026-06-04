@@ -7,6 +7,7 @@
 export const fetchUser = async ({ baseUrl, headers }) => {
     const res = await fetch(`${baseUrl}/api/v1/me`, { headers });
     if (res.status === 401) throw new Error('Unauthorized');
+    if (res.status === 403) throw new Error('Forbidden');
     if (!res.ok) throw new Error('Failed to fetch user');
     return res.json();
 };
@@ -24,3 +25,4 @@ export const logoutRequest = async ({ baseUrl, headers }) => {
         headers,
     });
 };
+

@@ -8,28 +8,19 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('welcome');
+// Public routes — no auth required
+Route::get('/', fn() => redirect()->route('login'))->name('welcome');
+Route::get('/login', fn() => view('auth.login'))->name('login');
+Route::get('/register', fn() => view('auth.register'))->name('register');
 
-Route::get('/login', function () {
-    return view('auth.login');
-})->name('login');
+// Customer routes — must be logged in
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/shop', fn() => view('shop'))->name('shop');
+    Route::get('/products', fn() => view('products'))->name('products');
+    Route::get('/orders', fn() => view('orders'))->name('orders');
+});
 
-Route::get('/register', function () {
-    return view('auth.register');
-})->name('register');
-
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->name('dashboard');
-
-Route::get('/products', function () {
-    return view('products');
-})->name('products');
-
- Route::get('/shop', function () {
-    return view('shop');
-            })->name('shop');
-// Admin product management
-            Route::get('/orders', fn() => view('orders'))->name('orders');
+// Admin/Staff routes — must be logged in AND pass IsAdminOrStaff check
+Route::middleware(['auth:sanctum', 'admin', 'security.headers'])->group(function () {
+    Route::get('/dashboard', fn() => view('dashboard'))->name('dashboard');
+});

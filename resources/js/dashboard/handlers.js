@@ -24,16 +24,20 @@ export const init = (baseUrl, headers) => {
 export const loadUser = async () => {
     try {
         const user = await fetchUser(ctx);
-        renderUserName(user.name);
-    } catch (err) {
-        // 401 means token is invalid — force re-login
-        if (err.message === 'Unauthorized') {
+
+        // Role guard — customers cannot access dashboard
+        if (!['admin', 'staff'].includes(user.role)) {
             localStorage.removeItem('token');
             window.location.href = '/login';
+            return;
         }
+
+        renderUserName(user.name);
+    } catch (err) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
     }
 };
-
 /* =========================================================
    LOAD STATS
 ========================================================= */
