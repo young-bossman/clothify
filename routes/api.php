@@ -8,6 +8,7 @@ use App\Http\Controllers\API\V1\ProductVariantController;
 use App\Http\Controllers\API\V1\CategoryController;
 use App\Http\Controllers\API\V1\StatsController;
 use App\Http\Controllers\API\V1\OrderController;
+use App\Http\Controllers\API\V1\CartController;
 
 Route::prefix('v1')->group(function () {
 
@@ -26,6 +27,13 @@ Route::prefix('v1')->group(function () {
 
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me',      [AuthController::class, 'me']);
+
+        // Cart routes — any authenticated user can manage their cart
+        Route::get('/cart',                [CartController::class, 'get']);
+        Route::post('/cart/add',           [CartController::class, 'add']);
+        Route::patch('/cart/item/{cartItem}', [CartController::class, 'updateItem']);
+        Route::delete('/cart/item/{cartItem}', [CartController::class, 'removeItem']);
+        Route::delete('/cart',            [CartController::class, 'clear']);
 
         // Customer — any authenticated user can place orders
         Route::post('/orders', [OrderController::class, 'store']);

@@ -12,6 +12,7 @@
  */
 
 import { init, loadUser, loadStats, bindLogout, bindProfileDropdown } from './handlers.js';
+import { requireAdminAuth, getAuthHeaders } from '../shared/auth.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -26,16 +27,15 @@ document.addEventListener('DOMContentLoaded', () => {
     /* =========================================================
        AUTH CHECK
     ========================================================= */
-    const token = localStorage.getItem('token');
-    if (!token) { window.location.href = '/login'; return; }
+    requireAdminAuth();
 
     /* =========================================================
        SHARED CONTEXT
     ========================================================= */
     const baseUrl = window.location.origin;
     const headers = {
-        Accept:        'application/json',
-        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+        ...getAuthHeaders(),
     };
 
     init(baseUrl, headers);

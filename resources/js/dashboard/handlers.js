@@ -6,6 +6,7 @@
  */
 
 import { fetchUser, fetchStats, logoutRequest } from './api.js';
+import { clearAuthData } from '../shared/auth.js';
 import { dom, renderUserName, renderStatCards, renderLowStock, renderRecentOrders } from './ui.js';
 
 /* =========================================================
@@ -27,14 +28,14 @@ export const loadUser = async () => {
 
         // Role guard — customers cannot access dashboard
         if (!['admin', 'staff'].includes(user.role)) {
-            localStorage.removeItem('token');
+            clearAuthData();
             window.location.href = '/login';
             return;
         }
 
         renderUserName(user.name);
     } catch (err) {
-        localStorage.removeItem('token');
+        clearAuthData();
         window.location.href = '/login';
     }
 };
@@ -60,7 +61,7 @@ export const bindLogout = () => {
         try {
             await logoutRequest(ctx);
         } finally {
-            localStorage.removeItem('token');
+            clearAuthData();
             window.location.href = '/login';
         }
     };

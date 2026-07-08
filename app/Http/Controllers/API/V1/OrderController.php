@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 
 use App\Models\OrderItem;
@@ -43,6 +44,17 @@ class OrderController extends Controller
         $request->validate([
             'status' => 'required|in:pending,processing,completed,cancelled',
         ]);
+
+        // If changing to cancelled, restore stock
+        if ($request->status === 'cancelled' && $order->status !== 'cancelled') {
+            DB::transaction(function () use ($order) {
+                $order->orderItems->each(function ($item) {
+                    if ($item->productVariant) {
+                        $item->productVariant->increment('stock_quantity', $item->quantity);
+                    }
+                });
+            });
+        }
 
         $order->update(['status' => $request->status]);
 
@@ -84,48 +96,97 @@ public function store(Request $request)
         'items.*.variant_id' => 'required|integer|exists:product_variants,id',
     ]);
 
-    $items       = $request->items;
-    $totalAmount = collect($items)->sum(fn($i) => $i['price'] * $i['qty']);
+    try {
+        $items       = $request->items;
+        $totalAmount = collect($items)->sum(fn($i) => $i['price'] * $i['qty']);
 
-    $order = DB::transaction(function () use ($request, $items, $totalAmount) {
-        $order = Order::create([
-            'user_id'          => $request->user()->id,
-            'total_amount'     => $totalAmount,
-            'status'           => 'pending',
-            'payment_status'   => 'unpaid',
-            'delivery_name'    => $request->delivery_name,
-            'delivery_phone'   => $request->delivery_phone,
-            'delivery_address' => $request->delivery_address,
-            'city'             => $request->city,
-            'region'           => $request->region,
-            'ghana_post_gps'   => $request->ghana_post_gps,
-            'landmark'         => $request->landmark,
-            'notes'            => $request->notes,
-            'payment_method'   => $request->payment_method,
-        ]);
+        $order = DB::transaction(function () use ($request, $items, $totalAmount) {
+            // Validate and lock all variants to prevent race conditions
+            $variantIds = array_column($items, 'variant_id');
+            $variants = ProductVariant::whereIn('id', $variantIds)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
 
-        foreach ($items as $item) {
-            OrderItem::create([
-                'order_id'           => $order->id,
-                'product_variant_id' => $item['variant_id'], // TODO: replace with real variant_id when variants wired to cart
-                'quantity'           => $item['qty'],
-                'price_at_purchase'  => $item['price'],
-                'cost_at_purchase'   => 0, // TODO: pull from product cost_price when available
+            // Validate stock availability for all items
+            foreach ($items as $item) {
+                $variant = $variants->get($item['variant_id']);
+                
+                if (!$variant) {
+                    throw new \Exception("Product variant {$item['variant_id']} not found");
+                }
+                
+                if ($variant->stock_quantity < $item['qty']) {
+                    throw new \Exception("Insufficient stock for {$item['name']}. Available: {$variant->stock_quantity}, Requested: {$item['qty']}");
+                }
+            }
+
+            // Create order
+            $order = Order::create([
+                'user_id'          => $request->user()->id,
+                'total_amount'     => $totalAmount,
+                'status'           => 'pending',
+                'payment_status'   => 'unpaid',
+                'delivery_name'    => $request->delivery_name,
+                'delivery_phone'   => $request->delivery_phone,
+                'delivery_address' => $request->delivery_address,
+                'city'             => $request->city,
+                'region'           => $request->region,
+                'ghana_post_gps'   => $request->ghana_post_gps,
+                'landmark'         => $request->landmark,
+                'notes'            => $request->notes,
+                'payment_method'   => $request->payment_method,
             ]);
-        }
 
-        return $order;
-    });
+            // Create order items and decrement stock
+            foreach ($items as $item) {
+                $variant = $variants->get($item['variant_id']);
+                
+                OrderItem::create([
+                    'order_id'           => $order->id,
+                    'product_variant_id' => $item['variant_id'],
+                    'quantity'           => $item['qty'],
+                    'price_at_purchase'  => $item['price'],
+                    'cost_at_purchase'   => 0,
+                ]);
 
-    return response()->json($order, 201);
+                // Decrement variant stock
+                $variant->decrement('stock_quantity', $item['qty']);
+
+                // Keep product-level stock display in sync if the product uses the same aggregate
+                if ($variant->product) {
+                    $variant->product->stock_quantity = max(0, $variant->product->stock_quantity - $item['qty']);
+                    $variant->product->save();
+                }
+            }
+
+            return $order;
+        });
+
+        return response()->json($order, 201);
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Order creation failed',
+            'error' => $e->getMessage()
+        ], 422);
+    }
 }
 
 
     // DELETE /api/v1/orders/{order}
     public function destroy(Order $order)
     {
-        $order->delete();
+        DB::transaction(function () use ($order) {
+            // Restore stock when order is cancelled
+            $order->orderItems->each(function ($item) {
+                if ($item->productVariant) {
+                    $item->productVariant->increment('stock_quantity', $item->quantity);
+                }
+            });
 
-        return response()->json(['message' => 'Order deleted']);
+            $order->delete();
+        });
+
+        return response()->json(['message' => 'Order deleted and stock restored']);
     }
 }

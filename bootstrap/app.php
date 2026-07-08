@@ -17,6 +17,17 @@ return Application::configure(basePath: dirname(__DIR__))
         // Mobile apps bypass this and use Bearer tokens instead
         $middleware->statefulApi();
 
+        // CSRF Protection Configuration:
+        // ────────────────────────────────────────────────────────────────
+        // API routes (api/*) use Bearer token authentication which is stateless
+        // and inherently CSRF-safe. CSRF tokens are only needed for cookie-based
+        // session auth. Exempting API routes from CSRF:
+        // • Prevents token mismatch errors on Bearer token requests
+        // • Maintains CSRF protection for web forms that use sessions
+        // • Allows mobile/SPA clients to use Bearer tokens without ceremony
+        // Security Model: api/* → Bearer tokens (stateless), web/* → sessions (cookies)
+        $middleware->validateCsrfTokens(except: ['api/*']);
+
         $middleware->alias([
             'admin' => \App\Http\Middleware\IsAdminOrStaff::class,
             'security.headers' => \App\Http\Middleware\SecurityHeaders::class,

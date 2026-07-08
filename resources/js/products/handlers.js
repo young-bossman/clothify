@@ -19,6 +19,7 @@ import {
     updateVariant,
     deleteVariant,
 } from './api.js';
+import { clearAuthData } from '../shared/auth.js';
 
 import {
     dom,
@@ -172,7 +173,7 @@ export const bindLogout = () => {
         try {
             await logoutRequest(ctx);
         } finally {
-            localStorage.removeItem('token');
+            clearAuthData();
             window.location.href = '/login';
         }
     });

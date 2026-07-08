@@ -6,24 +6,19 @@
  * so auth state never has to live here.
  */
 
+import { fetchJson } from '../shared/api.js';
+
 export const fetchCategories = async ({ baseUrl, headers }) => {
-    const res = await fetch(`${baseUrl}/api/v1/categories`, { headers });
-    if (!res.ok) throw new Error('Failed to load categories');
-    return res.json();
+    return fetchJson(`${baseUrl}/api/v1/categories`, { headers });
 };
 
 export const fetchProducts = async ({ baseUrl, headers, query }) => {
-    const res = await fetch(`${baseUrl}/api/v1/products?${query}`, { headers });
-    if (!res.ok) throw new Error('Failed to load products');
-    return res.json();
+    return fetchJson(`${baseUrl}/api/v1/products?${query}`, { headers });
 };
 
 export const fetchProductById = async ({ baseUrl, headers, id }) => {
-    const res = await fetch(`${baseUrl}/api/v1/products/${id}`, { headers });
-    if (!res.ok) throw new Error('Failed to load product');
-    return res.json();
+    return fetchJson(`${baseUrl}/api/v1/products/${id}`, { headers });
 };
-
 export const createProduct = async ({ baseUrl, headers, formData }) => {
     return fetch(`${baseUrl}/api/v1/products`, {
         method: 'POST',

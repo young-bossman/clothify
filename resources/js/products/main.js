@@ -15,14 +15,14 @@ import { init, loadCategories, loadProducts,
    bindEditImageUpload, bindCategoryToggles, 
    bindCreateProduct, bindUpdateProduct, 
    bindFilters, bindVariants } from './handlers.js';
+import { requireAdminAuth, getAuthHeaders } from '../shared/auth.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
     /* =========================================================
        AUTH CHECK
     ========================================================= */
-    const token = localStorage.getItem('token');
-    if (!token) { window.location.href = '/login'; return; }
+    requireAdminAuth();
 
     /* =========================================================
        SHARED CONTEXT
@@ -31,8 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
     ========================================================= */
     const baseUrl = window.location.origin;
     const headers = {
-        Authorization: `Bearer ${token}`,
         Accept: 'application/json',
+        ...getAuthHeaders(),
     };
 
     // Pass auth context to handlers once
