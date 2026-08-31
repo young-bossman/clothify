@@ -12,6 +12,7 @@
  */
 
 import { setBaseUrl, initTheme, initMobileNav, initPriceToggle, initCartDrawer, injectStyles, updateCartBadge, renderCart } from './ui.js';
+import { initializeCart } from './cart.js';
 import {
     init,
     loadCategories,
@@ -26,7 +27,7 @@ import {
     bindFilters,
 } from './handlers.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
 
     /* =========================================================
        SHARED CONTEXT
@@ -65,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /* =========================================================
        INITIAL LOAD
     ========================================================= */
+    await initializeCart();
     updateCartBadge();
     renderCart();
     loadCategories();

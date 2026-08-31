@@ -205,21 +205,34 @@ export const openProductModal = (product) => {
 
     const stockEl = document.getElementById('modalStock');
     const addBtn  = document.getElementById('modalAddBtn');
-    const qty     = product.stock_quantity ?? 0;
 
-    if (qty <= 0) {
-        stockEl.innerHTML  = `<span class="w-[7px] h-[7px] rounded-full bg-red-400 flex-shrink-0"></span><span class="text-red-400">Out of stock</span>`;
-        addBtn.disabled    = true;
-        addBtn.textContent = 'Out of Stock';
-    } else if (qty < 5) {
-        stockEl.innerHTML  = `<span class="w-[7px] h-[7px] rounded-full bg-yellow-400 flex-shrink-0"></span><span class="text-yellow-400">Only ${qty} left</span>`;
-        addBtn.disabled    = false;
-        addBtn.textContent = 'Add to Cart';
-    } else {
-        stockEl.innerHTML  = `<span class="w-[7px] h-[7px] rounded-full bg-green-400 flex-shrink-0"></span><span class="text-green-400">In stock</span>`;
-        addBtn.disabled    = false;
-        addBtn.textContent = 'Add to Cart';
-    }
+    const getStockForVariant = (variantId) => {
+        if (!Array.isArray(product.variants) || product.variants.length === 0) {
+            return product.stock_quantity ?? 0;
+        }
+
+        const variant = product.variants.find(v => v.id === variantId);
+        return variant ? variant.stock_quantity ?? 0 : product.variants.reduce((sum, v) => sum + (v.stock_quantity ?? 0), 0);
+    };
+
+    const renderModalStock = (stock) => {
+        if (stock <= 0) {
+            stockEl.innerHTML  = `<span class="w-[7px] h-[7px] rounded-full bg-red-400 flex-shrink-0"></span><span class="text-red-400">Out of stock</span>`;
+            addBtn.disabled    = true;
+            addBtn.textContent = 'Out of Stock';
+        } else if (stock < 5) {
+            stockEl.innerHTML  = `<span class="w-[7px] h-[7px] rounded-full bg-yellow-400 flex-shrink-0"></span><span class="text-yellow-400">Only ${stock} left</span>`;
+            addBtn.disabled    = false;
+            addBtn.textContent = 'Add to Cart';
+        } else {
+            stockEl.innerHTML  = `<span class="w-[7px] h-[7px] rounded-full bg-green-400 flex-shrink-0"></span><span class="text-green-400">In stock</span>`;
+            addBtn.disabled    = false;
+            addBtn.textContent = 'Add to Cart';
+        }
+    };
+
+    const initialVariantId = product.variants?.[0]?.id ?? null;
+    renderModalStock(getStockForVariant(initialVariantId));
 
     // Stamp the product id so handlers.js can look it up from the cache
     // Render variant selector
@@ -241,23 +254,14 @@ if (product.variants && product.variants.length > 0) {
     variantSection.innerHTML = '';
 }
 
-addBtn.dataset.productId = product.id;
+    const variantSelect = document.getElementById('variantSelect');
+    if (variantSelect) {
+        variantSelect.addEventListener('change', (event) => {
+            const selectedId = parseInt(event.target.value, 10);
+            renderModalStock(getStockForVariant(selectedId));
+        });
+    }
 
-    modalOverlay.classList.remove('opacity-0', 'pointer-events-none');
-    modalOverlay.classList.add('opacity-100');
-    modalInner.classList.remove('scale-[.98]', 'translate-y-4');
-};
-
-export const closeProductModal = () => {
-    modalOverlay.classList.add('opacity-0', 'pointer-events-none');
-    modalOverlay.classList.remove('opacity-100');
-    modalInner.classList.add('scale-[.98]', 'translate-y-4');
-};
-
-/* =========================================================
-   AUTH MODAL
-========================================================= */
-const authModal = document.getElementById('authModal');
 
 export const openAuthModal  = () => { authModal.classList.remove('hidden'); authModal.classList.add('flex'); };
 export const closeAuthModal = () => { authModal.classList.add('hidden');    authModal.classList.remove('flex'); };
@@ -312,7 +316,9 @@ export const renderProductGrid = (products) => {
                    <span class="font-display text-[3.5rem] font-light opacity-60" style="color:var(--bdr2)">${p.name.charAt(0).toUpperCase()}</span>
                </div>`;
 
-        const qty = p.stock_quantity ?? 0;
+        const qty = Array.isArray(p.variants) && p.variants.length
+            ? p.variants.reduce((sum, v) => sum + (v.stock_quantity ?? 0), 0)
+            : p.stock_quantity ?? 0;
 
         const stockHtml = qty <= 0
             ? `<span class="text-[.62rem] text-red-400">Out of stock</span>`

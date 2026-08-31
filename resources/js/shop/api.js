@@ -1,9 +1,10 @@
 /**
  * shop/api.js
  * ─────────────────────────────────────────────
- * All network requests for the Shop page.
- * Public endpoints use no auth header.
- * Checkout uses the customer_token.
+ * Product and order API requests for the Shop page.
+ * Authentication is handled by the shared auth module.
+ * Public product endpoints use no auth header.
+ * Order placement uses Bearer token from shared auth.
  */
 
 const JSON_HEADERS = { Accept: 'application/json' };
@@ -26,39 +27,17 @@ export const fetchProductById = async (baseUrl, id) => {
     return res.json();
 };
 
-export const loginRequest = async (baseUrl, { email, password }) => {
-    const res = await fetch(`${baseUrl}/api/v1/login`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body:    JSON.stringify({ email, password }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Login failed');
-    return data;
-};
-
-export const registerRequest = async (baseUrl, { name, email, password }) => {
-    const res = await fetch(`${baseUrl}/api/v1/register`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body:    JSON.stringify({ name, email, password, password_confirmation: password }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(Object.values(data.errors ?? {})[0]?.[0] || data.message || 'Registration failed');
-    return data;
-};
-
-export const placeOrderRequest = async (baseUrl, customerToken, payload) => {
+export const placeOrderRequest = async (baseUrl, bearerToken, payload) => {
     const res = await fetch(`${baseUrl}/api/v1/orders`, {
         method:  'POST',
         headers: {
             'Content-Type': 'application/json',
             Accept:         'application/json',
-            Authorization:  `Bearer ${customerToken}`,
+            Authorization:  `Bearer ${bearerToken}`,
         },
         body: JSON.stringify(payload),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(Object.values(data.errors ?? {})[0]?.[0] || data.message || 'Order failed');
+    if (!res.ok) throw new Error(Object.values(data.errors ?? {})[0]?.[0] || data.error || data.message || 'Order failed');
     return data;
 };

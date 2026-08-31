@@ -16,7 +16,7 @@ class ProductController extends Controller
     // List products with pagination, search, and sorting
     public function index(Request $request)
     {
-        $query = Product::with('category');
+        $query = Product::with('category', 'variants');
 
         // Only show active products on the public storefront
         // Admin panel passes no `public` param so it sees everything

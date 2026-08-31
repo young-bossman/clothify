@@ -8,16 +8,19 @@ services:
       dockerfile: docker/php/Dockerfile
     container_name: laravel_app2
     working_dir: /var/www
+    restart: unless-stopped
     volumes:
       - .:/var/www
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - laravel
 
   webserver:
     image: nginx:alpine
     container_name: laravel_webserver2
+    restart: unless-stopped
     ports:
       - "8000:80"
     volumes:
@@ -39,10 +42,15 @@ services:
       - "3307:3306"
     volumes:
       - dbdata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-psecret"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - laravel
 
-  phpmyadmin:   # ✅ NOW CORRECTLY PLACED
+  phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: laravel_phpmyadmin2
     restart: unless-stopped
@@ -53,12 +61,14 @@ services:
       PMA_PORT: 3306
       MYSQL_ROOT_PASSWORD: secret
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - laravel
 
 networks:
   laravel:
+    driver: bridge
 
 volumes:
   dbdata:

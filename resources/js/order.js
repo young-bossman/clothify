@@ -1,9 +1,10 @@
+import { requireAdminAuth, getAuthHeaders } from './shared/auth.js';
+
 document.addEventListener('DOMContentLoaded', () => {
-    const token = localStorage.getItem('token');
-    if (!token) { window.location.href = '/login'; return; }
+    requireAdminAuth();
 
     const baseUrl = window.location.origin;
-    const headers = { Accept: 'application/json', Authorization: `Bearer ${token}` };
+    const headers = { Accept: 'application/json', ...getAuthHeaders() };
 
     const openModal  = (m) => { m.classList.remove('hidden'); m.classList.add('flex'); };
     const closeModal = (m) => { m.classList.add('hidden');    m.classList.remove('flex'); };

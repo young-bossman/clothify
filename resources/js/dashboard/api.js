@@ -4,19 +4,14 @@
  * All network requests for the Dashboard feature.
  */
 
+import { fetchJson } from '../shared/api.js';
+
 export const fetchUser = async ({ baseUrl, headers }) => {
-    const res = await fetch(`${baseUrl}/api/v1/me`, { headers });
-    if (res.status === 401) throw new Error('Unauthorized');
-    if (res.status === 403) throw new Error('Forbidden');
-    if (!res.ok) throw new Error('Failed to fetch user');
-    return res.json();
+    return fetchJson(`${baseUrl}/api/v1/me`, { headers });
 };
 
 export const fetchStats = async ({ baseUrl, headers }) => {
-    const res = await fetch(`${baseUrl}/api/v1/stats`, { headers });
-    if (res.status === 401) throw new Error('Unauthorized');
-    if (!res.ok) throw new Error('Failed to fetch stats');
-    return res.json();
+    return fetchJson(`${baseUrl}/api/v1/stats`, { headers });
 };
 
 export const logoutRequest = async ({ baseUrl, headers }) => {

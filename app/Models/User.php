@@ -50,12 +50,16 @@ class User extends Authenticatable
     }
 
     public function orders()
-{
-    return $this->hasMany(Order::class);
-}
+    {
+        return $this->hasMany(Order::class);
+    }
 
+    public function cart()
+    {
+        return $this->hasOne(Cart::class);
+    }
 
-// Role helpers
+    // Role helpers
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
