@@ -476,6 +476,8 @@ export const bindCheckoutModal = () => {
             return;
         }
 
+        // Pricing and line items are resolved server-side from the user's cart
+        // (see SEC-001) — the client only supplies delivery/payment details.
         const payload = {
             delivery_name:    co_name,
             delivery_phone:   co_phone,
@@ -486,16 +488,15 @@ export const bindCheckoutModal = () => {
             landmark:         document.getElementById('co_landmark').value.trim(),
             notes:            document.getElementById('co_notes').value.trim(),
             payment_method:   paymentMethod,
-            items: getCart().map(i => ({ id: i.id, variant_id: i.variant_id, name: i.name, price: i.price, qty: i.qty })),
         };
 
-        if (await payload.items.length === 0) {
+        if (getCart().length === 0) {
             errorEl.textContent = 'Your cart is empty';
             errorEl.classList.remove('hidden');
             return;
         }
 
-        const invalidItem = payload.items.find(i => !Number.isInteger(i.variant_id));
+        const invalidItem = getCart().find(i => !Number.isInteger(i.variant_id));
         if (invalidItem) {
             errorEl.textContent = 'One of the cart items is missing a selected variant. Remove it and add it again.';
             errorEl.classList.remove('hidden');
