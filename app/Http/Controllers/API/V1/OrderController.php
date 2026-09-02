@@ -90,6 +90,14 @@ class OrderController extends Controller
             'payment_method' => 'required|in:cash_on_delivery,mobile_money,paystack',
         ]);
 
+        // SEC-004: strip_tags in addition to (not instead of) the validation
+        // above — these three fields are free text and get rendered via
+        // innerHTML in dashboard/ui.js's renderRecentOrders(), mirroring the
+        // pattern already used for the registration name in AuthController.
+        $deliveryName = strip_tags(trim($request->delivery_name));
+        $landmark = $request->landmark !== null ? strip_tags(trim($request->landmark)) : null;
+        $notes = $request->notes !== null ? strip_tags(trim($request->notes)) : null;
+
         $cart = $request->user()->cart()->with('items')->first();
 
         if (! $cart || $cart->items->isEmpty()) {
@@ -110,7 +118,7 @@ class OrderController extends Controller
         }
 
         try {
-            $order = DB::transaction(function () use ($request, $cart) {
+            $order = DB::transaction(function () use ($request, $cart, $deliveryName, $landmark, $notes) {
                 // Lock all variants (and their product for authoritative pricing) to
                 // prevent race conditions with concurrent checkouts/stock adjustments.
                 $variantIds = $cart->items->pluck('variant_id')->all();
@@ -146,14 +154,14 @@ class OrderController extends Controller
                     'total_amount' => $totalAmount,
                     'status' => 'pending',
                     'payment_status' => 'unpaid',
-                    'delivery_name' => $request->delivery_name,
+                    'delivery_name' => $deliveryName,
                     'delivery_phone' => $request->delivery_phone,
                     'delivery_address' => $request->delivery_address,
                     'city' => $request->city,
                     'region' => $request->region,
                     'ghana_post_gps' => $request->ghana_post_gps,
-                    'landmark' => $request->landmark,
-                    'notes' => $request->notes,
+                    'landmark' => $landmark,
+                    'notes' => $notes,
                     'payment_method' => $request->payment_method,
                 ]);
 

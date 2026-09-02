@@ -1,214 +1,162 @@
 # Security Architecture Documentation
 
-## CSRF Token Protection & API Authentication
+## Authentication & CSRF Protection
 
-### Issue Fixed
-**CSRF Token Mismatch Error**: When placing orders via the shop frontend, the request failed with a CSRF token mismatch error.
+### Model: single guard, session cookie + CSRF, everywhere
 
-### Root Cause
-The middleware configuration applied CSRF token validation to **all routes** (`api/*`), but the API uses Bearer token authentication which is stateless and inherently CSRF-safe. CSRF protection is only needed for cookie-based session authentication.
+Every route — `web/*` pages and `api/v1/*` alike — is authenticated the same
+way: a session cookie (set by `Auth::login()` on the `web` guard) plus CSRF
+verification on every state-changing request. There is no Bearer-token path.
+This is deliberate, not incidental: an earlier design issued a Bearer token
+*alongside* the session on every login, and pages inconsistently relied on
+one or the other. That split was the root cause of SEC-003 (a manually
+maintained CSRF except-list for the "Bearer-only" routes, which silently left
+`/api/v1/cart*` unprotected because it was actually session-authenticated).
+The fix was to remove the second mechanism rather than keep reconciling the
+list — see `docs/SECURITY_FOLLOWUPS.md` for that history.
 
-### Solution Implemented
+### How a request gets authenticated
 
-#### 1. Bootstrap Configuration (`bootstrap/app.php`)
-```php
-$middleware->validateCsrfTokens(except: ['api/*']);
-```
+1. **Page load**: the browser fetches `/sanctum/csrf-cookie`, which sets an
+   encrypted `XSRF-TOKEN` cookie (`shared/auth.js`'s `fetchCsrfCookie()`,
+   called on every page's entry point before any mutating request can fire).
+2. **Login/register** (`POST /api/v1/login` or `/register`, in the `web`
+   middleware group): validates credentials, calls `Auth::login($user)`,
+   regenerates the session. Response is `{ message, user }` — no token.
+   `shared/auth.js`'s `storeAuthSession()` keeps `user` in `localStorage`
+   purely for client-side UI gating/display (see below); it is not a
+   credential.
+3. **Every subsequent request** (cart, dashboard, products, orders, logout):
+   `fetch(..., { credentials: 'include', headers: { 'X-XSRF-TOKEN': ... } })`.
+   The session cookie authenticates the user; the CSRF header proves the
+   request originated from a page that could read `document.cookie` for this
+   origin, which a cross-site attacker cannot forge.
+4. **Server-side**: `Route::middleware(['auth:sanctum'])` resolves the user
+   from the session (Sanctum's `guard => ['web']`); `bootstrap/app.php`'s
+   `$middleware->statefulApi()` plus `$middleware->validateCsrfTokens()`
+   (**no except-list**) enforce CSRF uniformly across every route.
 
-**What this does:**
-- Exempts all `/api/*` routes from CSRF token validation
-- Maintains CSRF protection for web forms that use session cookies
-- Allows Bearer token authentication to work without ceremony
+### Why CSRF enforcement needed `statefulApi()`, not just the `web` group
 
-**Security Model:**
-- `api/*` routes: Bearer token auth (stateless) → No CSRF needed
-- `web/*` routes: Session cookies (stateful) → CSRF protection active
+Laravel's `ValidateCsrfToken` middleware only runs inside the `web`
+middleware group by default — `routes/api.php` is registered under the `api`
+group, which doesn't include it. Sanctum's `statefulApi()` closes that gap:
+it adds `EnsureFrontendRequestsAreStateful` to the `api` group, which — for
+any request whose `Origin`/`Referer` matches a configured stateful domain —
+runs an inner pipeline (`EncryptCookies`, `StartSession`, the *same*
+`ValidateCsrfToken` class, `AuthenticateSession`) before the route executes.
+Because it's the same class, `$middleware->validateCsrfTokens(except: [...])`
+controls CSRF enforcement for `api/v1/*` routes too, not just `web/*` — which
+is exactly the mechanism SEC-003 (Split 1) exploited to fix cart specifically,
+before Split 2 removed the need for an except-list at all.
 
-#### 2. Centralized Authentication (`resources/js/shared/auth.js`)
-Created a unified auth module to eliminate duplication and ensure consistent security practices across all pages.
+One consequence worth knowing: `EnsureFrontendRequestsAreStateful` classifies
+a request as "frontend" by the `Origin`/`Referer` header alone — **not** by
+whether it carries a session cookie. A same-origin `fetch()` also sends the
+session cookie by default even without `credentials: 'include'` explicitly
+set. In other words, CSRF enforcement here isn't opt-in per request; it's
+uniform for anything that looks like it came from the browser, which is why
+a single `validateCsrfTokens()` call with no exceptions is sufficient and
+correct for this app now that nothing is Bearer-only.
 
-**Key Features:**
-- **Token Management**: Centralized token storage/retrieval
-- **CSRF Handling**: For web forms that need it (login/register)
-- **Error Handling**: Consistent error extraction and display
-- **Session Lifecycle**: Proper token expiration tracking
-- **Role-based Logic**: Different expiry times for admin (1 day) vs customer (7 days)
+### What `auth_user` in localStorage is (and isn't)
 
-**Token Storage Strategy:**
-```javascript
-// Priority: admin token > customer token
-const token = localStorage.getItem('token') || localStorage.getItem('customer_token');
-```
+`shared/auth.js` keeps the logged-in user's `{ id, name, email, role }` in
+`localStorage` after login/register, and clears it on logout. This is:
 
-#### 3. Implementation Details
+- **Used for**: client-side page guards (`requireAdminAuth`,
+  `requireCustomerAuth`, `requireAuth`) that redirect to `/login` before a
+  protected page even starts rendering, and role-based UI branches
+  (`isAdminUser`, `isCustomerUser`, `redirectAfterAuth`).
+- **Not used as**: a credential. It's never sent to the server and never
+  checked server-side. The *actual* authorization boundary is the session
+  cookie + CSRF token on each request — e.g. dashboard's `loadUser()` makes a
+  real `GET /api/v1/me` call and redirects to `/login` on failure regardless
+  of what `auth_user` says. The client-side guards exist purely to avoid a
+  flash of the wrong page while that real check is in flight; a stale or
+  tampered `auth_user` value cannot grant access to anything, since every
+  protected server response depends on the session, which the client cannot
+  forge.
 
-**Bearer Token Requests (API calls):**
-```javascript
-// No CSRF token needed — Bearer token is CSRF-safe
-headers: {
-    Authorization: `Bearer ${token}`,
-    'Content-Type': 'application/json'
-}
-```
+### Error handling
 
-**Form Submissions (login/register):**
-```javascript
-// CSRF token added for web forms via Sanctum
-await fetchCsrfCookie(); // Sets XSRF-TOKEN cookie
-headers: { 'X-XSRF-TOKEN': getCsrfToken() }
-```
-
----
-
-## Security Best Practices Applied
-
-### 1. Token Isolation
-- Admin/staff tokens stored under `token` key
-- Customer tokens stored under `customer_token` key
-- Prevents role escalation through token confusion
-
-### 2. Token Expiration
-- **Admin/Staff**: 1 day (sensitive dashboard access)
-- **Customer**: 7 days (standard shop access)
-- Expiry time always validated: `Date.now() > parseInt(expiresAt)`
-- Matches backend expiration set in `AuthController`
-
-### 3. Stale Data Prevention
-```javascript
-clearAuthData(); // Always wipe before storing new session
-// Prevents stale admin tokens leaking to customer sessions
-```
-
-### 4. CSRF Protection Layers
-1. **API routes** (Bearer tokens): Stateless → No CSRF needed
-2. **Web forms** (Sessions): Stateful → CSRF token required
-3. **Sanctum CSRF cookie**: Ensures initial XSRF-TOKEN is set
-4. **Header validation**: Laravel validates X-XSRF-TOKEN header on web forms
-
-### 5. Error Handling
-- **Security**: Error messages don't leak sensitive info (e.g., "user doesn't exist")
-- **UX**: Specific validation errors shown (required fields, format issues)
-- **Debugging**: Console logs for development (marked with `[Auth]`)
-
-### 6. Code Architecture
-- **DRY Principle**: Auth logic centralized in `shared/auth.js`
-- **Single Responsibility**: Each file has one purpose (api.js, handlers.js, auth.js)
-- **No Duplication**: Login/register logic only in one place
-- **Maintainability**: Changes to auth flow only need one update
+- **Security**: error messages don't leak sensitive info (e.g. "user doesn't
+  exist" vs. a generic "Invalid email or password").
+- **UX**: specific validation errors are shown (required fields, format
+  issues).
+- **Debugging**: console warnings for non-fatal client-side failures (e.g. a
+  failed CSRF-cookie fetch), prefixed `[Auth]`.
 
 ---
 
-## Authentication Flow
+## Authentication Flows
 
-### Login/Register Flow
+### Login / register
 ```
+Page load → fetchCsrfCookie() (sets XSRF-TOKEN cookie)
+    ↓
 User submits form
     ↓
-Fetch CSRF cookie (/sanctum/csrf-cookie)
+POST /api/v1/login (or /register) with X-XSRF-TOKEN header + credentials: 'include'
     ↓
-Extract XSRF-TOKEN from cookie
+Backend validates CSRF token + credentials, calls Auth::login(), regenerates session
     ↓
-POST to /api/v1/login with bearer auth + XSRF header
+Success: { message, user } — no token
     ↓
-Backend validates CSRF token + credentials
+Frontend stores user (localStorage, for UI gating/display only)
     ↓
-Success: Backend returns { user, token }
-    ↓
-Frontend stores token + user role
-    ↓
-Redirect based on role (admin → /dashboard, customer → /shop)
+Redirect based on role (admin/staff → /dashboard, customer → /shop)
 ```
 
-### Order Placement Flow
+### Cart / dashboard / products / order mutations
 ```
-Customer adds items to cart
+Page load → fetchCsrfCookie()
     ↓
-Clicks checkout
+User action (add to cart, save product, update order status, ...)
     ↓
-Gets auth token from localStorage
+fetch(url, { method, credentials: 'include', headers: { 'X-XSRF-TOKEN': ... }, body })
     ↓
-If no token → redirect to login modal
+Server: session identifies the user, CSRF token is verified, auth:sanctum + (where
+applicable) the `admin` middleware authorize the action
     ↓
-If token exists → open checkout form
-    ↓
-User fills delivery info + payment method
-    ↓
-POST /api/v1/orders with Bearer token
-    ↓
-NO CSRF token needed (Bearer tokens are stateless)
-    ↓
-Success: Order created, cart cleared
+Success/failure JSON response
 ```
 
----
-
-## Files Modified
-
-### Backend
-- **`bootstrap/app.php`**: Added CSRF exemption for API routes
-
-### Frontend
-- **`resources/js/shared/auth.js`** (NEW): Centralized auth module
-- **`resources/js/auth.js`**: Refactored to use shared module
-- **`resources/js/shop/handlers.js`**: 
-  - Uses shared auth module for login/register
-  - Updated checkout validation
-  - Removed localStorage duplication
-- **`resources/js/shop/api.js`**: Removed duplicate login/register functions
+### Logout
+```
+User clicks logout
+    ↓
+POST /api/v1/logout with credentials: 'include' + X-XSRF-TOKEN
+    ↓
+Backend: Auth::guard('web')->logout(), session invalidated, CSRF token regenerated
+    ↓
+Frontend clears auth_user from localStorage, redirects to /login
+```
 
 ---
 
 ## Security Validation Checklist
 
-✅ CSRF tokens only enforced on stateful routes (web forms)  
-✅ Bearer tokens work without CSRF (stateless API)  
-✅ Auth tokens centrally managed (no duplication)  
-✅ Token expiration enforced consistently  
-✅ Stale session data cleared before storing new auth  
-✅ Role-based token storage (admin vs customer)  
-✅ Error messages don't leak sensitive info  
-✅ CSRF cookie fetched before form submission  
-✅ X-XSRF-TOKEN header included in web forms  
-✅ Bearer Authorization header used for API calls  
-
----
-
-## Testing the Fix
-
-### Test 1: Order Placement (Bearer Token)
-```bash
-curl -X POST http://localhost:8000/api/v1/orders \
-  -H "Authorization: Bearer {customer_token}" \
-  -H "Content-Type: application/json" \
-  -d '{...order_payload...}'
-# Should succeed without CSRF token
-```
-
-### Test 2: Login via Web Form
-```bash
-# Browser auto-includes cookies from /sanctum/csrf-cookie
-# X-XSRF-TOKEN header added from cookie
-POST /api/v1/login
-# Should succeed with CSRF validation
-```
-
-### Test 3: Mobile App (Bearer Token)
-```bash
-# No cookies set, no CSRF cookie fetch needed
-curl -X POST http://api.clothify.local/api/v1/orders \
-  -H "Authorization: Bearer {token}" \
-  -H "Content-Type: application/json" \
-  -d '{...order_payload...}'
-# Should succeed (API exempt from CSRF)
-```
+- CSRF tokens enforced uniformly across `web/*` and `api/v1/*` — no except-list
+- Every authenticated route uses the same guard (session cookie); no Bearer-token path
+- `auth_user` in localStorage is UI-gating only, never a credential, never sent to the server
+- Stale session data cleared before storing a new one (`clearAuthData()` before `storeAuthSession()`)
+- Role-based redirect after login/register (admin/staff vs. customer)
+- Error messages don't leak sensitive info
+- CSRF cookie fetched on every page's entry point before any mutating request
+- `X-XSRF-TOKEN` header included on every mutating fetch, via one shared helper (`getFormHeaders()`)
 
 ---
 
 ## Future Enhancements
 
-1. **Implement refresh tokens**: Current tokens are long-lived, consider short-lived tokens + refresh flow
-2. **Add token revocation**: Log out should invalidate server-side token
-3. **Implement rate limiting**: Protect auth endpoints from brute force
-4. **Add 2FA**: For admin/staff accounts
-5. **Use httpOnly cookies**: Better than localStorage for token storage (requires backend changes)
-6. **CSP headers**: Prevent XSS attacks that could steal tokens
+1. **Purge or expire pre-existing Bearer tokens** issued before the session+CSRF
+   consolidation — proposed as a manual one-off command, not yet run (needs
+   sign-off; see `docs/SECURITY_FOLLOWUPS.md`).
+2. **Swap `auth:sanctum` for plain `auth`** on `routes/api.php` to close the
+   Bearer-token fallback immediately rather than waiting for natural token
+   expiry (see `docs/SECURITY_FOLLOWUPS.md`).
+3. **Implement rate limiting** more broadly on auth endpoints beyond the
+   existing login rate limiter.
+4. **Add 2FA** for admin/staff accounts.
+5. **CSP headers** to further reduce XSS blast radius.

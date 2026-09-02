@@ -13,20 +13,26 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Enables Sanctum SPA cookie auth for stateful domains (web browser)
-        // Mobile apps bypass this and use Bearer tokens instead
+        // Enables Sanctum SPA cookie auth for stateful domains (web browser).
+        // No mobile client exists today — every current caller is session-authenticated.
+        // auth:sanctum is retained so a future Bearer-token mobile client can be added
+        // without a routing change; see docs/SECURITY_FOLLOWUPS.md.
         $middleware->statefulApi();
 
         // CSRF Protection Configuration:
         // ────────────────────────────────────────────────────────────────
-        // API routes (api/*) use Bearer token authentication which is stateless
-        // and inherently CSRF-safe. CSRF tokens are only needed for cookie-based
-        // session auth. Exempting API routes from CSRF:
-        // • Prevents token mismatch errors on Bearer token requests
-        // • Maintains CSRF protection for web forms that use sessions
-        // • Allows mobile/SPA clients to use Bearer tokens without ceremony
-        // Security Model: api/* → Bearer tokens (stateless), web/* → sessions (cookies)
-        $middleware->validateCsrfTokens(except: ['api/*']);
+        // SEC-003 (Split 1) found /api/v1/cart* was forgeable cross-site because
+        // api/* was blanket-exempted from CSRF on the assumption that all API
+        // routes were Bearer-token-only. Split 1 fixed cart specifically by
+        // excepting the (then-legitimate) Bearer-only routes explicitly instead.
+        //
+        // This pass (Split 2) removed Bearer-token auth entirely — every route
+        // is now session-cookie authenticated (see AuthController, shared/auth.js)
+        // — so there is no longer a Bearer-only path to except. No except() list
+        // at all, on purpose: a manually maintained list is itself a standing
+        // risk (a new route can silently land on the wrong side of it). Every
+        // api/v1/* and web/* route is uniformly CSRF-checked.
+        $middleware->validateCsrfTokens();
 
         $middleware->alias([
             'admin' => \App\Http\Middleware\IsAdminOrStaff::class,

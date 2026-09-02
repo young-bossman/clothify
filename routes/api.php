@@ -12,7 +12,9 @@ use App\Http\Controllers\API\V1\CartController;
 
 Route::prefix('v1')->group(function () {
 
-    // Public auth routes — web clients get session, mobile clients get Bearer tokens
+    // Public auth routes — session-cookie auth only today. auth:sanctum is retained on
+    // the protected route group below to support a future Bearer-token mobile client;
+    // see docs/SECURITY_FOLLOWUPS.md for the intended integration pattern.
     // Ensure web middleware runs for these so session cookies are created for browser clients
     Route::middleware('web')->post('/register', [AuthController::class, 'register']);
     Route::middleware('web')->post('/login',    [AuthController::class, 'login']);
@@ -25,6 +27,9 @@ Route::prefix('v1')->group(function () {
     // Authenticated routes
     Route::middleware(['auth:sanctum'])->group(function () {
 
+        // When mobile/Bearer-token auth is added, this will need to branch (or get a
+        // separate mobile logout route) to call currentAccessToken()->delete() — today's
+        // logout() only handles session invalidation, since no token is ever issued.
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me',      [AuthController::class, 'me']);
 

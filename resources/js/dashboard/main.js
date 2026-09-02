@@ -12,9 +12,9 @@
  */
 
 import { init, loadUser, loadStats, bindLogout, bindProfileDropdown } from './handlers.js';
-import { requireAdminAuth, getAuthHeaders } from '../shared/auth.js';
+import { requireAdminAuth, fetchCsrfCookie } from '../shared/auth.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
 
     /* =========================================================
        PAGE GUARD
@@ -31,12 +31,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* =========================================================
        SHARED CONTEXT
+       Session-cookie authenticated; the XSRF-TOKEN cookie must be
+       in place before the logout POST fires.
     ========================================================= */
     const baseUrl = window.location.origin;
-    const headers = {
-        Accept: 'application/json',
-        ...getAuthHeaders(),
-    };
+    const headers = { Accept: 'application/json' };
+    await fetchCsrfCookie();
 
     init(baseUrl, headers);
 

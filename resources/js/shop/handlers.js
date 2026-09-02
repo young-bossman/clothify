@@ -47,7 +47,7 @@ import {
 import {
     login,
     register,
-    getAuthToken,
+    getAuthUser,
     storeAuthSession,
     showFormError,
     clearFormError,
@@ -310,8 +310,8 @@ export const bindCheckoutButton = () => {
     document.getElementById('checkoutBtn').addEventListener('click', () => {
         if (!cartCount()) { showToast('Your cart is empty'); return; }
 
-        const token = getAuthToken();
-        if (!token) {
+        const user = getAuthUser();
+        if (!user) {
             closeCart();
             setTimeout(() => openAuthModal(), 320);
         } else {
@@ -431,7 +431,7 @@ export const bindAuthModal = () => {
 
 /* =========================================================
    BIND CHECKOUT MODAL (place order)
-   Validates form and places order with auth token
+   Validates form and places order via session + CSRF
 ========================================================= */
 export const bindCheckoutModal = () => {
     document.getElementById('closeCheckoutModal').addEventListener('click', closeCheckoutModal);
@@ -455,8 +455,8 @@ export const bindCheckoutModal = () => {
 
     // Place order
     document.getElementById('placeOrderBtn').addEventListener('click', async () => {
-        const token = getAuthToken();
-        if (!token) { openAuthModal(); return; }
+        const user = getAuthUser();
+        if (!user) { openAuthModal(); return; }
 
         const errorEl = document.getElementById('checkoutError');
         errorEl.classList.add('hidden');
@@ -504,7 +504,7 @@ export const bindCheckoutModal = () => {
         }
 
         try {
-            const data = await placeOrderRequest(baseUrl, token, payload);
+            const data = await placeOrderRequest(baseUrl, payload);
 
             // Success — clear cart
             clearCart();

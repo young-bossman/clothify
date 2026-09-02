@@ -47,7 +47,11 @@ return [
     |
     */
 
-    'expiration' => null, // expiry is set per token in AuthController by role
+    // No code currently issues tokens (AuthController is session+CSRF only,
+    // see docs/SECURITY_FOLLOWUPS.md). This expiration applies automatically
+    // once mobile/API-token auth is implemented, so a forgotten or leaked
+    // token can't remain valid indefinitely.
+    'expiration' => 60 * 24 * 7, // 7 days
     /*
     |--------------------------------------------------------------------------
     | Token Prefix
