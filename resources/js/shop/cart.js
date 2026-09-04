@@ -5,6 +5,8 @@
  * with a guest localStorage fallback for unauthenticated shoppers.
  */
 
+import { fetchCsrfCookie, getFormHeaders } from '../shared/auth.js';
+
 const STORAGE_KEY = 'clothify-guest-cart';
 const API_BASE = '/api/v1';
 let cart = [];
@@ -62,6 +64,10 @@ const hasGuestCart = () => loadGuestCart().length > 0;
 
 export const initializeCart = async () => {
     try {
+        // Cart mutations are session-cookie authenticated, so the XSRF-TOKEN
+        // cookie must be in place before any add/update/remove/clear call.
+        await fetchCsrfCookie();
+
         const response = await fetch(`${API_BASE}/cart`, {
             credentials: 'include',
         });
@@ -162,6 +168,7 @@ export const addToCart = async (product) => {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
+                ...getFormHeaders(),
             },
             body: JSON.stringify({
                 product_id: product.id,
@@ -203,6 +210,7 @@ export const removeFromCart = async (cartItemId) => {
             credentials: 'include',
             headers: {
                 'Accept': 'application/json',
+                ...getFormHeaders(),
             },
         });
 
@@ -249,6 +257,7 @@ export const changeQty = async (cartItemId, newQty) => {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
+                ...getFormHeaders(),
             },
             body: JSON.stringify({ qty: newQty }),
         });
@@ -291,6 +300,7 @@ export const clearCart = async () => {
             credentials: 'include',
             headers: {
                 'Accept': 'application/json',
+                ...getFormHeaders(),
             },
         });
 

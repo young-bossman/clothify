@@ -5,9 +5,9 @@
  *
  * This file contains reusable auth logic, including:
  * - login / register API calls
- * - token storage and expiry handling
+ * - user-info storage for client-side UI gating/display
  * - auth guard helpers for admin and customer pages
- * - CSRF cookie support for session-based web forms
+ * - CSRF cookie support (every authenticated request is session+CSRF)
  *
  * Use this module from page-specific files like resources/js/auth.js
  * or from entry points such as resources/js/dashboard/main.js.
@@ -29,72 +29,31 @@ export const getAuthUser = () => {
 };
 
 /**
- * Get current bearer token (admin/staff or customer)
- * @returns {string|null} Bearer token
- */
-export const getAuthToken = () => {
-    // Priority: admin token, then customer token
-    return localStorage.getItem('token') || localStorage.getItem('customer_token');
-};
-
-/**
- * Check if token is expired
- * @returns {boolean} True if expired or missing
- */
-export const isTokenExpired = () => {
-    const expiresAt = localStorage.getItem('token_expires_at');
-    if (!expiresAt) return true;
-    return Date.now() > parseInt(expiresAt);
-};
-
-/**
  * Clear all auth data from localStorage
- * Ensures no stale role/token leakage between sessions
+ * Ensures no stale role/user-info leakage between sessions
  */
 export const clearAuthData = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('customer_token');
     localStorage.removeItem('auth_user');
-    localStorage.removeItem('token_expires_at');
 };
 
 /**
- * Store auth session after successful login/register
- * @param {Object} authData - { user: {...}, token: '...' }
+ * Store auth session after successful login/register.
+ * Auth itself is the session cookie (+ CSRF); this only keeps the
+ * user's profile info around for client-side UI gating/display.
+ * @param {Object} authData - { user: {...} }
  */
 export const storeAuthSession = (authData) => {
-    if (!authData.user || !authData.token) {
-        throw new Error('Invalid auth response: missing user or token');
+    if (!authData.user) {
+        throw new Error('Invalid auth response: missing user');
     }
 
     clearAuthData(); // Wipe stale data first
-
-    const isAdmin = ['admin', 'staff'].includes(authData.user.role);
-    const expiresInMs = isAdmin ? (1 * 24 * 60 * 60 * 1000) : (7 * 24 * 60 * 60 * 1000);
-
     localStorage.setItem('auth_user', JSON.stringify(authData.user));
-    localStorage.setItem(isAdmin ? 'token' : 'customer_token', authData.token);
-    localStorage.setItem('token_expires_at', Date.now() + expiresInMs);
-};
-
-/**
- * Get authorization header for API requests
- * @returns {Object} Headers object with Authorization bearer token
- */
-export const getAuthHeaders = () => {
-    const token = getAuthToken();
-    if (!token) return {};
-    return { Authorization: `Bearer ${token}` };
 };
 
 /**
  * Helpers for page-level auth guards.
- * Admin pages should use getAdminToken()/requireAdminAuth().
- * Storefront pages should use getCustomerToken()/requireCustomerAuth().
  */
-export const getAdminToken = () => localStorage.getItem('token');
-export const getCustomerToken = () => localStorage.getItem('customer_token');
-
 export const isAdminUser = () => {
     const user = getAuthUser();
     return user && ['admin', 'staff'].includes(user.role);
@@ -105,11 +64,17 @@ export const isCustomerUser = () => {
     return user && user.role === 'customer';
 };
 
+/**
+ * Client-side pre-checks only, to avoid a flash of the wrong page before
+ * a real auth check completes. They are NOT the security boundary — every
+ * API call is independently session+CSRF authenticated server-side, and
+ * callers (e.g. dashboard's loadUser()) already redirect on a failed
+ * request if the session turns out to be invalid.
+ */
 export const requireAdminAuth = (redirectTo = null) => {
-    const token = getAdminToken();
     const user = getAuthUser();
 
-    if (!user || !token || isTokenExpired() || !['admin', 'staff'].includes(user.role)) {
+    if (!user || !['admin', 'staff'].includes(user.role)) {
         clearAuthData();
         const target = redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : '';
         window.location.href = `/login${target}`;
@@ -117,10 +82,9 @@ export const requireAdminAuth = (redirectTo = null) => {
 };
 
 export const requireCustomerAuth = (redirectTo = null) => {
-    const token = getCustomerToken();
     const user = getAuthUser();
 
-    if (!user || !token || isTokenExpired() || user.role !== 'customer') {
+    if (!user || user.role !== 'customer') {
         clearAuthData();
         const target = redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : '';
         window.location.href = `/login${target}`;
@@ -153,7 +117,6 @@ export const fetchCsrfCookie = async () => {
         await fetch('/sanctum/csrf-cookie', { credentials: 'include' });
     } catch (err) {
         console.warn('[Auth] CSRF cookie fetch failed:', err);
-        // Non-fatal — CSRF is only needed for form submissions, not API Bearer requests
     }
 };
 
@@ -178,13 +141,14 @@ export const getFormHeaders = () => {
  * @throws {Error} With message from server or network error
  */
 const apiRequest = async (url, options = {}) => {
+    const { headers, ...restOptions } = options;
     const res = await fetch(url, {
+        ...restOptions,
         headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json',
-            ...options.headers,
+            ...headers,
         },
-        ...options,
     });
 
     const data = await res.json();
@@ -206,7 +170,7 @@ const apiRequest = async (url, options = {}) => {
  * @param {string} baseUrl - API base URL
  * @param {string} email
  * @param {string} password
- * @returns {Promise<Object>} { user, token }
+ * @returns {Promise<Object>} { user }
  */
 export const login = async (baseUrl, email, password) => {
     await fetchCsrfCookie();
@@ -218,7 +182,7 @@ export const login = async (baseUrl, email, password) => {
         body: JSON.stringify({ email, password }),
     });
 
-    if (!data.user || !data.token) {
+    if (!data.user) {
         throw new Error('Invalid login response from server');
     }
 
@@ -232,7 +196,7 @@ export const login = async (baseUrl, email, password) => {
  * @param {string} name
  * @param {string} email
  * @param {string} password
- * @returns {Promise<Object>} { user, token }
+ * @returns {Promise<Object>} { user }
  */
 export const register = async (baseUrl, name, email, password) => {
     await fetchCsrfCookie();
@@ -244,7 +208,7 @@ export const register = async (baseUrl, name, email, password) => {
         body: JSON.stringify({ name, email, password, password_confirmation: password }),
     });
 
-    if (!data.user || !data.token) {
+    if (!data.user) {
         throw new Error('Invalid register response from server');
     }
 
@@ -259,14 +223,11 @@ export const register = async (baseUrl, name, email, password) => {
  */
 export const logout = async (baseUrl) => {
     try {
-        // Make logout request but don't fail if it errors
-        const token = getAuthToken();
-        if (token) {
-            await apiRequest(`${baseUrl}/api/v1/logout`, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${token}` },
-            });
-        }
+        await apiRequest(`${baseUrl}/api/v1/logout`, {
+            method: 'POST',
+            headers: getFormHeaders(),
+            credentials: 'include',
+        });
     } catch (err) {
         console.warn('[Auth] Logout API call failed:', err);
     } finally {
@@ -300,9 +261,8 @@ export const redirectAfterAuth = () => {
  */
 export const requireAuth = (redirectTo = null) => {
     const user = getAuthUser();
-    const token = getAuthToken();
 
-    if (!user || !token || isTokenExpired()) {
+    if (!user) {
         clearAuthData();
         const target = redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : '';
         window.location.href = `/login${target}`;

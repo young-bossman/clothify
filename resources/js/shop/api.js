@@ -2,10 +2,12 @@
  * shop/api.js
  * ─────────────────────────────────────────────
  * Product and order API requests for the Shop page.
- * Authentication is handled by the shared auth module.
- * Public product endpoints use no auth header.
- * Order placement uses Bearer token from shared auth.
+ * Public product endpoints are unauthenticated.
+ * Order placement is session-cookie + CSRF authenticated,
+ * same as cart.js.
  */
+
+import { getFormHeaders } from '../shared/auth.js';
 
 const JSON_HEADERS = { Accept: 'application/json' };
 
@@ -27,13 +29,14 @@ export const fetchProductById = async (baseUrl, id) => {
     return res.json();
 };
 
-export const placeOrderRequest = async (baseUrl, bearerToken, payload) => {
+export const placeOrderRequest = async (baseUrl, payload) => {
     const res = await fetch(`${baseUrl}/api/v1/orders`, {
-        method:  'POST',
+        method:      'POST',
+        credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
             Accept:         'application/json',
-            Authorization:  `Bearer ${bearerToken}`,
+            ...getFormHeaders(),
         },
         body: JSON.stringify(payload),
     });

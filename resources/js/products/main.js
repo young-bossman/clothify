@@ -10,14 +10,14 @@
  *   4. Trigger initial data load
  */
 
-import { init, loadCategories, loadProducts, 
-   bindLogout, bindCreateImageUpload, 
-   bindEditImageUpload, bindCategoryToggles, 
-   bindCreateProduct, bindUpdateProduct, 
+import { init, loadCategories, loadProducts,
+   bindLogout, bindCreateImageUpload,
+   bindEditImageUpload, bindCategoryToggles,
+   bindCreateProduct, bindUpdateProduct,
    bindFilters, bindVariants } from './handlers.js';
-import { requireAdminAuth, getAuthHeaders } from '../shared/auth.js';
+import { requireAdminAuth, fetchCsrfCookie } from '../shared/auth.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
 
     /* =========================================================
        AUTH CHECK
@@ -26,14 +26,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* =========================================================
        SHARED CONTEXT
-       Applied to every fetch call so Laravel always returns
-       JSON errors instead of HTML redirects.
+       Session-cookie authenticated; the XSRF-TOKEN cookie must be
+       in place before any mutating request fires.
     ========================================================= */
     const baseUrl = window.location.origin;
-    const headers = {
-        Accept: 'application/json',
-        ...getAuthHeaders(),
-    };
+    const headers = { Accept: 'application/json' };
+    await fetchCsrfCookie();
 
     // Pass auth context to handlers once
     init(baseUrl, headers);

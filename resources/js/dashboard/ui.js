@@ -87,10 +87,17 @@ export const renderRecentOrders = (orders) => {
         return;
     }
 
-    dom.recentOrdersBody.innerHTML = orders.map(o => `
-        <tr class="border-b border-gray-700 hover:bg-gray-700/40">
+    dom.recentOrdersBody.innerHTML = '';
+
+    orders.forEach(o => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-gray-700 hover:bg-gray-700/40';
+
+        // delivery_name is free text from checkout — never interpolate it
+        // into an innerHTML template string. Set via textContent below.
+        tr.innerHTML = `
             <td class="py-3 px-4 text-gray-300">#${o.id}</td>
-            <td class="py-3 px-4">${o.delivery_name}</td>
+            <td class="py-3 px-4"></td>
             <td class="py-3 px-4">GHS ${parseFloat(o.total_amount).toFixed(2)}</td>
             <td class="py-3 px-4">
                 <span class="text-xs px-2 py-1 rounded-full font-semibold ${statusClass(o.status)}">
@@ -98,6 +105,9 @@ export const renderRecentOrders = (orders) => {
                 </span>
             </td>
             <td class="py-3 px-4 text-gray-400 text-sm">${new Date(o.created_at).toLocaleDateString()}</td>
-        </tr>
-    `).join('');
+        `;
+
+        tr.children[1].textContent = o.delivery_name;
+        dom.recentOrdersBody.appendChild(tr);
+    });
 };

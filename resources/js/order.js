@@ -1,10 +1,11 @@
-import { requireAdminAuth, getAuthHeaders } from './shared/auth.js';
+import { requireAdminAuth, fetchCsrfCookie, getFormHeaders, clearAuthData } from './shared/auth.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     requireAdminAuth();
 
     const baseUrl = window.location.origin;
-    const headers = { Accept: 'application/json', ...getAuthHeaders() };
+    const headers = { Accept: 'application/json' };
+    await fetchCsrfCookie();
 
     const openModal  = (m) => { m.classList.remove('hidden'); m.classList.add('flex'); };
     const closeModal = (m) => { m.classList.add('hidden');    m.classList.remove('flex'); };
@@ -45,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         ordersBody.innerHTML = `<tr><td colspan="7" class="text-center text-gray-400 py-6">Loading...</td></tr>`;
 
-        fetch(url, { headers })
+        fetch(url, { headers, credentials: 'include' })
             .then(res => res.json())
             .then(data => {
                 if (data.data.length === 0) {
@@ -102,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const openOrderModal = (id) => {
         currentOrderId = id;
 
-        fetch(`${baseUrl}/api/v1/orders/${id}`, { headers })
+        fetch(`${baseUrl}/api/v1/orders/${id}`, { headers, credentials: 'include' })
             .then(res => res.json())
             .then(order => {
                 document.getElementById('modalTitle').innerText = `Order #${order.id}`;
@@ -149,12 +150,14 @@ document.addEventListener('DOMContentLoaded', () => {
         await Promise.all([
             fetch(`${baseUrl}/api/v1/orders/${currentOrderId}/status`, {
                 method: 'PATCH',
-                headers: { ...headers, 'Content-Type': 'application/json' },
+                credentials: 'include',
+                headers: { ...headers, 'Content-Type': 'application/json', ...getFormHeaders() },
                 body: JSON.stringify({ status }),
             }),
             fetch(`${baseUrl}/api/v1/orders/${currentOrderId}/payment-status`, {
                 method: 'PATCH',
-                headers: { ...headers, 'Content-Type': 'application/json' },
+                credentials: 'include',
+                headers: { ...headers, 'Content-Type': 'application/json', ...getFormHeaders() },
                 body: JSON.stringify({ payment_status: paymentStatus }),
             }),
         ]);
@@ -170,7 +173,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         await fetch(`${baseUrl}/api/v1/orders/${currentOrderId}`, {
             method: 'DELETE',
-            headers,
+            credentials: 'include',
+            headers: { ...headers, ...getFormHeaders() },
         });
 
         closeModal(orderModal);
@@ -189,9 +193,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async () => {
             try {
-                await fetch(`${baseUrl}/api/v1/logout`, { method: 'POST', headers });
+                await fetch(`${baseUrl}/api/v1/logout`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { ...headers, ...getFormHeaders() },
+                });
             } finally {
-                localStorage.removeItem('token');
+                clearAuthData();
                 window.location.href = '/login';
             }
         });

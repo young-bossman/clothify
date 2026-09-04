@@ -262,6 +262,23 @@ if (product.variants && product.variants.length > 0) {
         });
     }
 
+    addBtn.dataset.productId = product.id;
+
+    modalOverlay.classList.remove('opacity-0', 'pointer-events-none');
+    modalOverlay.classList.add('opacity-100');
+    modalInner.classList.remove('scale-[.98]', 'translate-y-4');
+};
+
+export const closeProductModal = () => {
+    modalOverlay.classList.add('opacity-0', 'pointer-events-none');
+    modalOverlay.classList.remove('opacity-100');
+    modalInner.classList.add('scale-[.98]', 'translate-y-4');
+};
+
+/* =========================================================
+   AUTH MODAL
+========================================================= */
+const authModal = document.getElementById('authModal');
 
 export const openAuthModal  = () => { authModal.classList.remove('hidden'); authModal.classList.add('flex'); };
 export const closeAuthModal = () => { authModal.classList.add('hidden');    authModal.classList.remove('flex'); };

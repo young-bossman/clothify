@@ -7,12 +7,13 @@
  */
 
 export const fetchJson = async (url, options = {}) => {
+    const { headers, ...restOptions } = options;
     const res = await fetch(url, {
+        ...restOptions,
         headers: {
             Accept: 'application/json',
-            ...options.headers,
+            ...headers,
         },
-        ...options,
     });
 
     let data = null;
