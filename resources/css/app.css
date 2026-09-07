@@ -14,6 +14,9 @@
 
 .admin-shell {
     background: #0b1120;
+    /* Firefox — inherits to descendants; the webkit rules below cover Chromium/Safari */
+    scrollbar-width: thin;
+    scrollbar-color: #334155 transparent;
 }
 
 .focus-ring:focus {

@@ -1,5 +1,5 @@
 /**
- * shared/chrome.js
+ * shared/shell.js
  * ─────────────────────────────────────────────
  * Sidebar/topbar behaviour shared by every <x-app> page:
  * logout and the profile dropdown. Every lookup is null-guarded —
@@ -8,12 +8,12 @@
 import { logout, getAuthUser } from './auth.js';
 
 /* =========================================================
-   CHROME USER NAME
+   SHELL USER NAME
    Display-only, read from the locally stored user — no fetch.
    The dashboard's loadUser() remains the real auth check and
    overwrites these with the server's answer.
 ========================================================= */
-export const renderChromeUser = () => {
+export const renderShellUser = () => {
     const els = document.querySelectorAll('.userName');
     if (!els.length) return;
 

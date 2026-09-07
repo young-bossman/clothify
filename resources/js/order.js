@@ -1,14 +1,14 @@
 import { requireAdminAuth, fetchCsrfCookie, getFormHeaders } from './shared/auth.js';
-import { bindLogout, bindProfileDropdown, bindDrawer, renderChromeUser } from './shared/chrome.js';
+import { bindLogout, bindProfileDropdown, bindDrawer, renderShellUser } from './shared/shell.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     requireAdminAuth();
 
-    // Chrome UI needs no network state — bind before the CSRF await
+    // Shell UI needs no network state — bind before the CSRF await
     // so the drawer and dropdown respond on first paint.
     bindDrawer();
     bindProfileDropdown();
-    renderChromeUser();
+    renderShellUser();
 
     const baseUrl = window.location.origin;
     const headers = { Accept: 'application/json' };

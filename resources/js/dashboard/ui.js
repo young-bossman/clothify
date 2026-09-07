@@ -19,6 +19,19 @@ export const dom = {
 };
 
 /* =========================================================
+   HTML ESCAPING
+   For values interpolated into innerHTML template strings.
+   Values set via textContent do not need this.
+========================================================= */
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+}[char]));
+
+/* =========================================================
    STATUS BADGE HELPER
 ========================================================= */
 export const statusClass = (status) => {
@@ -64,8 +77,8 @@ export const renderLowStock = (items) => {
             <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-md bg-slate-800 shrink-0"></div>
                 <div>
-                    <p class="font-medium text-white leading-tight">${p.name}</p>
-                    <p class="text-xs text-slate-500">${p.sku}</p>
+                    <p class="font-medium text-white leading-tight">${escapeHtml(p.name)}</p>
+                    <p class="text-xs text-slate-500">${escapeHtml(p.sku)}</p>
                 </div>
             </div>
             <span class="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${p.stock_quantity === 0 ? 'bg-rose-500/15 text-rose-400' : 'bg-amber-500/15 text-amber-400'}">${p.stock_quantity === 0 ? 'Out of stock' : `${p.stock_quantity} left`}</span>
