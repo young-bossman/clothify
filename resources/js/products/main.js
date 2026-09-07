@@ -11,11 +11,12 @@
  */
 
 import { init, loadCategories, loadProducts,
-   bindLogout, bindCreateImageUpload,
+   bindCreateImageUpload,
    bindEditImageUpload, bindCategoryToggles,
    bindCreateProduct, bindUpdateProduct,
    bindFilters, bindVariants } from './handlers.js';
 import { requireAdminAuth, fetchCsrfCookie } from '../shared/auth.js';
+import { bindLogout, bindProfileDropdown, bindDrawer, renderChromeUser } from '../shared/chrome.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
 
@@ -23,6 +24,12 @@ document.addEventListener('DOMContentLoaded', async () => {
        AUTH CHECK
     ========================================================= */
     requireAdminAuth();
+
+    /* Chrome UI needs no network state — bind before the CSRF await
+       so the drawer and dropdown respond on first paint. */
+    bindDrawer();
+    bindProfileDropdown();
+    renderChromeUser();
 
     /* =========================================================
        SHARED CONTEXT

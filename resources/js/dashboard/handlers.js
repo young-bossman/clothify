@@ -5,9 +5,9 @@
  * Imports from api.js and ui.js only.
  */
 
-import { fetchUser, fetchStats, logoutRequest } from './api.js';
+import { fetchUser, fetchStats } from './api.js';
 import { clearAuthData } from '../shared/auth.js';
-import { dom, renderUserName, renderStatCards, renderLowStock, renderRecentOrders } from './ui.js';
+import { renderUserName, renderStatCards, renderLowStock, renderRecentOrders } from './ui.js';
 
 /* =========================================================
    SHARED AUTH CONTEXT
@@ -51,37 +51,4 @@ export const loadStats = async () => {
     } catch (err) {
         console.error('Stats fetch failed:', err);
     }
-};
-
-/* =========================================================
-   LOGOUT
-========================================================= */
-export const bindLogout = () => {
-    const handleLogout = async () => {
-        try {
-            await logoutRequest(ctx);
-        } finally {
-            clearAuthData();
-            window.location.href = '/login';
-        }
-    };
-
-    if (dom.logoutBtn)    dom.logoutBtn.addEventListener('click', handleLogout);
-    if (dom.logoutBtnTop) dom.logoutBtnTop.addEventListener('click', handleLogout);
-};
-
-/* =========================================================
-   PROFILE DROPDOWN
-========================================================= */
-export const bindProfileDropdown = () => {
-    if (!dom.profileToggle || !dom.profileDropdown) return;
-
-    dom.profileToggle.addEventListener('click', (e) => {
-        e.stopPropagation();
-        dom.profileDropdown.classList.toggle('hidden');
-    });
-
-    document.addEventListener('click', () => {
-        dom.profileDropdown.classList.add('hidden');
-    });
 };

@@ -1,11 +1,20 @@
-import { requireAdminAuth, fetchCsrfCookie, getFormHeaders, clearAuthData } from './shared/auth.js';
+import { requireAdminAuth, fetchCsrfCookie, getFormHeaders } from './shared/auth.js';
+import { bindLogout, bindProfileDropdown, bindDrawer, renderChromeUser } from './shared/chrome.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     requireAdminAuth();
 
+    // Chrome UI needs no network state — bind before the CSRF await
+    // so the drawer and dropdown respond on first paint.
+    bindDrawer();
+    bindProfileDropdown();
+    renderChromeUser();
+
     const baseUrl = window.location.origin;
     const headers = { Accept: 'application/json' };
     await fetchCsrfCookie();
+
+    bindLogout();
 
     const openModal  = (m) => { m.classList.remove('hidden'); m.classList.add('flex'); };
     const closeModal = (m) => { m.classList.add('hidden');    m.classList.remove('flex'); };
@@ -15,7 +24,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const filterStatus  = document.getElementById('filterStatus');
     const filterPayment = document.getElementById('filterPayment');
     const orderModal    = document.getElementById('orderModal');
-    const logoutBtn     = document.getElementById('logoutBtn');
 
     let currentPage    = 1;
     let currentOrderId = null;
@@ -188,22 +196,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Filters
     filterStatus.addEventListener('change',  () => loadOrders(1));
     filterPayment.addEventListener('change', () => loadOrders(1));
-
-    // Logout
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', async () => {
-            try {
-                await fetch(`${baseUrl}/api/v1/logout`, {
-                    method: 'POST',
-                    credentials: 'include',
-                    headers: { ...headers, ...getFormHeaders() },
-                });
-            } finally {
-                clearAuthData();
-                window.location.href = '/login';
-            }
-        });
-    }
 
     // Also update dashboard sidebar Orders link
     loadOrders();

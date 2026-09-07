@@ -3,23 +3,14 @@
 <div class="min-h-screen flex bg-gray-900 text-white">
 
     {{-- Sidebar --}}
-    <aside class="w-64 bg-gray-800 p-6">
-        <h2 class="text-2xl font-bold text-indigo-400 mb-8">Clothify</h2>
+    <x-sidebar />
 
-        <nav class="space-y-4">
-            <a href="{{ route('dashboard') }}" class="block text-gray-300 hover:text-white">Dashboard</a>
-            <a href="{{ route('products') }}" class="block text-white font-semibold">Products</a>
-            <a href="{{ route('orders') }}" class="block text-gray-300 hover:text-white">Orders</a>
-            <a href="{{ route('shop') }}" class="block text-gray-300 hover:text-white">Online Shop</a>
+    <div class="flex-1 min-w-0">
 
-            <button id="logoutBtn" class="mt-10 w-full text-left text-red-400 hover:text-red-500">
-                Logout
-            </button>
-        </nav>
-    </aside>
+        <x-topbar />
 
     {{-- Main --}}
-    <main class="flex-1 p-6">
+    <main class="p-6">
 
         <div class="flex justify-between items-center mb-4">
             <h1 class="text-2xl font-bold">Products</h1>
@@ -77,7 +68,8 @@
         {{-- Pagination container --}}
         <div id="paginationContainer" class="flex justify-center mt-4 space-x-2"></div>
 
-    </main>
+        </main>
+    </div>
 </div>
 
 {{-- ================= CREATE PRODUCT MODAL ================= --}}

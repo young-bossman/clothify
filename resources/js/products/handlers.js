@@ -13,13 +13,11 @@ import {
     createProduct,
     updateProduct,
     deleteProduct,
-    logoutRequest,
     fetchVariants,
     createVariant,
     updateVariant,
     deleteVariant,
 } from './api.js';
-import { clearAuthData } from '../shared/auth.js';
 
 import {
     dom,
@@ -162,20 +160,6 @@ const bindTableActions = () => {
                 showToast('Failed to load product data. Please try again.', 'error');
             }
         };
-    });
-};
-
-/* =========================================================
-   LOGOUT
-========================================================= */
-export const bindLogout = () => {
-    dom.logoutBtn?.addEventListener('click', async () => {
-        try {
-            await logoutRequest(ctx);
-        } finally {
-            clearAuthData();
-            window.location.href = '/login';
-        }
     });
 };
 

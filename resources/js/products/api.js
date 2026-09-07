@@ -48,15 +48,6 @@ export const deleteProduct = async ({ baseUrl, headers, id }) => {
     return res;
 };
 
-export const logoutRequest = async ({ baseUrl, headers }) => {
-    return fetch(`${baseUrl}/api/v1/logout`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { ...headers, ...getFormHeaders() },
-    });
-};
-
-
 // Additional API functions for variants, stock movements, etc. can be added here as needed.
 export const fetchVariants = async ({ baseUrl, headers, productId }) => {
     const res = await fetch(`${baseUrl}/api/v1/products/${productId}/variants`, { headers, credentials: 'include' });

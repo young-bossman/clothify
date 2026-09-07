@@ -9,11 +9,7 @@
    DOM REFERENCES
 ========================================================= */
 export const dom = {
-    logoutBtn:        document.getElementById('logoutBtn'),
-    logoutBtnTop:     document.getElementById('logoutBtnTop'),
     userNameEls:      document.querySelectorAll('.userName'),
-    profileToggle:    document.getElementById('profileToggle'),
-    profileDropdown:  document.getElementById('profileDropdown'),
     productCount:     document.getElementById('productCount'),
     orderCount:       document.getElementById('orderCount'),
     revenue:          document.getElementById('revenue'),

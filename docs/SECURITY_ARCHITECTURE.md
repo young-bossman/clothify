@@ -150,13 +150,17 @@ Frontend clears auth_user from localStorage, redirects to /login
 
 ## Future Enhancements
 
-1. **Purge or expire pre-existing Bearer tokens** issued before the session+CSRF
-   consolidation — proposed as a manual one-off command, not yet run (needs
-   sign-off; see `docs/SECURITY_FOLLOWUPS.md`).
-2. **Swap `auth:sanctum` for plain `auth`** on `routes/api.php` to close the
-   Bearer-token fallback immediately rather than waiting for natural token
-   expiry (see `docs/SECURITY_FOLLOWUPS.md`).
-3. **Implement rate limiting** more broadly on auth endpoints beyond the
+1. **Tighten CSP's `script-src`** on `/dashboard` — `SecurityHeaders`
+   middleware currently allows `'unsafe-inline'`; removing it would further
+   reduce the blast radius of any future XSS. Tracked as SEC-005 in
+   `docs/SECURITY_FOLLOWUPS.md`.
+2. **Implement rate limiting** more broadly on auth endpoints beyond the
    existing login rate limiter.
-4. **Add 2FA** for admin/staff accounts.
-5. **CSP headers** to further reduce XSS blast radius.
+3. **Add 2FA** for admin/staff accounts.
+
+Two items formerly listed here are now closed — see SEC-004 in
+`docs/SECURITY_FOLLOWUPS.md`: the pre-existing Bearer token table was purged
+and future tokens now expire automatically (7 days), and the decision was
+made to deliberately *keep* `auth:sanctum` (rather than swap to plain `auth`)
+for a possible future mobile client, since the purge already closed the
+fallback risk.

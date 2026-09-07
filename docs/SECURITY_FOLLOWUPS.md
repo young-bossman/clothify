@@ -95,6 +95,14 @@ authenticated, uniformly, with no except-list to maintain.
   never referenced by any blade view).
 - `config/sanctum.php`: corrected the stale "expiry set per token in
   AuthController" comment — no code sets token expiry anymore.
+- `resources/js/shop/ui.js`: restored a missing closing brace on
+  `openProductModal` — it had also swallowed `closeProductModal`, the
+  `authModal` declaration, and the modal-open classList calls, breaking
+  `npm run build` entirely, present since before Split 1. Restored from the
+  last commit where it was intact (`27fcb40`) as a Step 0 prerequisite (needed
+  to verify the JS changes above actually build); diffed against that commit
+  to confirm nothing else was lost. Re-verified 2026-09-04: `node --check`
+  passes and both functions are present.
 
 ### Deliberately left alone
 - `personal_access_tokens` table and its migration: harmless, standard
@@ -173,7 +181,7 @@ yet; this is not a task to build them.
   — the shared `AuthController::logout()` does not and should not do this
   (see the comment above the `/logout` route).
 
-## SEC-004 — Stored XSS via unsanitized order free-text fields
+## SEC-005 — Stored XSS via unsanitized order free-text fields
 
 **Status: Closed for the live sink; candidates noted below for future sinks.**
 
@@ -216,12 +224,13 @@ execution against same-origin endpoints.
   for the same `strip_tags(trim(...))` treatment if a future dashboard/admin
   view ever renders them that way.
 - CSP hardening (tightening `script-src`'s `'unsafe-inline'` on
-  `/dashboard`) — tracked separately as SEC-005, not touched here.
+  `/dashboard`) — tracked as a Future Enhancement in
+  `docs/SECURITY_ARCHITECTURE.md`, not touched here.
 
 ## Open — pre-existing bugs discovered incidentally (unrelated to auth)
 
-Found while working on the above; none touched, all out of scope for an
-auth-consolidation pass:
+Found while working on the above; out of scope for an auth-consolidation
+pass. Re-verified 2026-09-04, all still present on `main`:
 
 - `routes/api.php` registers `POST /api/v1/product-variants` with no
   `{product}` segment, but `ProductVariantController::store()` expects a
@@ -229,14 +238,10 @@ auth-consolidation pass:
   (`fetchVariants`/`createVariant`/`updateVariant`/`deleteVariant`) call
   `/api/v1/products/{id}/variants...` — a path that has no matching route at
   all. The product-variants admin feature is effectively non-functional.
-- `resources/js/shop/ui.js` had a missing closing brace on `openProductModal`
-  that also swallowed `closeProductModal`, the `authModal` declaration, and
-  the modal-open classList calls — broke `npm run build` entirely, present
-  since before Split 1. Restored from the last commit where it was intact
-  (`27fcb40`) as a Split-2 Step 0 prerequisite (needed to verify these JS
-  changes actually build); diffed against that commit to confirm nothing else
-  was lost.
 - `tests/Feature/ExampleTest.php` asserts `GET /` returns 200; the app
   redirects `/` to `/login` (302). Fails on `main`, unrelated to this work.
 - `database/migrations/2026_03_05_173448_add_payment_status_to_orders_table.php.php`
   has a duplicated `.php` extension in its filename.
+
+(The `resources/js/shop/ui.js` missing-brace bug formerly listed here was
+already fixed — see the Split 2 "What was fixed" list above.)

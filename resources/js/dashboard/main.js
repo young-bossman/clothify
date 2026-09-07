@@ -11,8 +11,9 @@
  *   5. Trigger initial data loads
  */
 
-import { init, loadUser, loadStats, bindLogout, bindProfileDropdown } from './handlers.js';
+import { init, loadUser, loadStats } from './handlers.js';
 import { requireAdminAuth, fetchCsrfCookie } from '../shared/auth.js';
+import { bindLogout, bindProfileDropdown, bindDrawer, renderChromeUser } from '../shared/chrome.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
 
@@ -29,6 +30,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     ========================================================= */
     requireAdminAuth();
 
+    /* Chrome UI needs no network state — bind before the CSRF await
+       so the drawer and dropdown respond on first paint. */
+    bindDrawer();
+    bindProfileDropdown();
+    renderChromeUser();
+
     /* =========================================================
        SHARED CONTEXT
        Session-cookie authenticated; the XSRF-TOKEN cookie must be
@@ -44,7 +51,6 @@ document.addEventListener('DOMContentLoaded', async () => {
        WIRE UP HANDLERS
     ========================================================= */
     bindLogout();
-    bindProfileDropdown();
 
     /* =========================================================
        INITIAL DATA LOAD

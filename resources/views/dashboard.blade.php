@@ -2,90 +2,95 @@
 
 <div class="min-h-screen flex">
 
-    <!-- Sidebar -->
-    <aside class="w-64 bg-gray-800 p-6">
-        <h2 class="text-2xl font-bold text-indigo-400 mb-8">Clothify</h2>
-        <nav class="space-y-4">
-            <a href="{{ route('dashboard') }}" class="block text-gray-300 hover:text-white">Dashboard</a>
-            <a href="{{ route('products') }}"  class="block text-gray-300 hover:text-white">Products</a>
-            <a href="{{  route('orders') }}"    class="block text-gray-300 hover:text-white">Orders</a>
-            <a href="{{ route('shop') }}" class="block text-gray-300 hover:text-white">Online Shop</a>
-            <button id="logoutBtn" class="mt-10 w-full text-left text-red-400 hover:text-red-500">Logout</button>
-        </nav>
-    </aside>
+    <x-sidebar />
 
-    <!-- Main Content -->
-    <main class="flex-1 p-10 space-y-8">
+    <div class="flex-1 min-w-0">
 
-        <!-- Top Bar -->
-        <div class="flex justify-end">
-            <div class="relative">
-                <button id="profileToggle" class="flex items-center space-x-2">
-                    <span class="userName font-semibold">Loading...</span>
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                    </svg>
-                </button>
-                <div id="profileDropdown" class="absolute right-0 mt-2 w-40 bg-gray-800 rounded shadow-lg hidden">
-                    <a href="#" class="block px-4 py-2 hover:bg-gray-700">Profile</a>
-                    <button id="logoutBtnTop" class="w-full text-left px-4 py-2 text-red-400 hover:bg-gray-700">Logout</button>
+        <x-topbar />
+
+        <main class="p-4 sm:p-6 max-w-[1400px] space-y-6">
+
+            <div class="fade-in">
+                <h1 class="text-2xl font-bold text-white">Welcome, <span class="userName">Loading...</span></h1>
+                <p class="text-sm text-slate-400 mt-1">Here's what's happening with your store today.</p>
+            </div>
+
+            <!-- Stat Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 fade-in">
+                <div class="bg-slate-850 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition">
+                    <div class="flex items-center justify-between">
+                        <p class="text-xs text-slate-400 font-medium">Products</p>
+                        <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    </div>
+                    <p id="productCount" class="text-2xl font-bold text-white mt-2">—</p>
+                </div>
+
+                <div class="bg-slate-850 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition">
+                    <div class="flex items-center justify-between">
+                        <p class="text-xs text-slate-400 font-medium">Orders</p>
+                        <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 2a1 1 0 00-1 1v1H6a2 2 0 00-2 2v13a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2V3a1 1 0 00-1-1H9z"/></svg>
+                    </div>
+                    <p id="orderCount" class="text-2xl font-bold text-white mt-2">—</p>
+                </div>
+
+                <div class="bg-slate-850 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition">
+                    <div class="flex items-center justify-between">
+                        <p class="text-xs text-slate-400 font-medium">Revenue</p>
+                        <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 10v2"/></svg>
+                    </div>
+                    <p id="revenue" class="text-2xl font-bold text-white mt-2">—</p>
+                </div>
+
+                <div class="bg-slate-850 border border-amber-800/40 rounded-xl p-4 hover:border-amber-700/60 transition">
+                    <div class="flex items-center justify-between">
+                        <p class="text-xs text-slate-400 font-medium">Low Stock</p>
+                        <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3.75m0 3.75h.008M4.062 19h15.876c1.05 0 1.706-1.14 1.18-2.05L13.18 4.05c-.525-.91-1.836-.91-2.36 0L2.882 16.95c-.525.91.13 2.05 1.18 2.05z"/></svg>
+                    </div>
+                    <p id="lowStockCount" class="text-2xl font-bold text-amber-400 mt-2">—</p>
+                    <p class="text-[11px] text-slate-500 mt-1">Needs attention</p>
                 </div>
             </div>
-        </div>
 
-        <!-- Welcome + Stat Cards -->
-        <div class="bg-gray-800 rounded-xl p-8 shadow-lg">
-            <h1 class="text-3xl font-bold mb-2">Welcome, <span class="userName">Loading...</span></h1>
-            <p class="text-gray-400 mb-6">Manage your store from here</p>
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 fade-in">
 
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div class="bg-gray-900 p-6 rounded-lg">
-                    <h3 class="text-lg font-semibold">Products</h3>
-                    <p class="text-2xl mt-2" id="productCount">—</p>
+                <!-- Low Stock Alerts -->
+                <div class="lg:col-span-2 bg-slate-850 border border-slate-800 rounded-xl p-4 sm:p-5">
+                    <div class="flex items-center gap-2 mb-4">
+                        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3.75m0 3.75h.008M4.062 19h15.876c1.05 0 1.706-1.14 1.18-2.05L13.18 4.05c-.525-.91-1.836-.91-2.36 0L2.882 16.95c-.525.91.13 2.05 1.18 2.05z"/></svg>
+                        <h2 class="font-semibold text-white text-sm">Low Stock Alerts</h2>
+                    </div>
+                    <div id="lowStockList" class="text-sm">
+                        <p class="text-slate-500 text-sm">Loading...</p>
+                    </div>
                 </div>
-                <div class="bg-gray-900 p-6 rounded-lg">
-                    <h3 class="text-lg font-semibold">Orders</h3>
-                    <p class="text-2xl mt-2" id="orderCount">—</p>
-                </div>
-                <div class="bg-gray-900 p-6 rounded-lg">
-                    <h3 class="text-lg font-semibold">Revenue</h3>
-                    <p class="text-2xl mt-2" id="revenue">—</p>
-                </div>
-                <div class="bg-gray-900 p-6 rounded-lg">
-                    <h3 class="text-lg font-semibold">Low Stock</h3>
-                    <p class="text-2xl mt-2" id="lowStockCount">—</p>
+
+                <!-- Recent Orders -->
+                <div class="lg:col-span-3 bg-slate-850 border border-slate-800 rounded-xl p-4 sm:p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="font-semibold text-white text-sm">Recent Orders</h2>
+                        <a href="{{ route('orders') }}" class="focus-ring text-xs text-indigo-400 hover:text-indigo-300 font-medium">View all</a>
+                    </div>
+                    <div class="overflow-x-auto -mx-1">
+                        <table class="w-full text-sm">
+                            <thead class="text-slate-500 text-xs uppercase tracking-wide">
+                                <tr>
+                                    <th class="text-left px-1 py-2 font-medium">Order</th>
+                                    <th class="text-left px-1 py-2 font-medium">Customer</th>
+                                    <th class="text-left px-1 py-2 font-medium">Amount</th>
+                                    <th class="text-left px-1 py-2 font-medium">Status</th>
+                                    <th class="text-left px-1 py-2 font-medium">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentOrdersBody">
+                                <tr><td colspan="5" class="text-center text-slate-500 py-4">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Low Stock Alerts -->
-        <div class="bg-gray-800 rounded-xl p-8 shadow-lg">
-            <h2 class="text-xl font-bold mb-4">⚠ Low Stock Alerts</h2>
-            <div id="lowStockList">
-                <p class="text-gray-400 text-sm">Loading...</p>
-            </div>
-        </div>
-
-        <!-- Recent Orders -->
-        <div class="bg-gray-800 rounded-xl p-8 shadow-lg">
-            <h2 class="text-xl font-bold mb-4">Recent Orders</h2>
-            <table class="w-full text-left text-sm">
-                <thead>
-                    <tr class="text-gray-400 border-b border-gray-700">
-                        <th class="py-2 px-4">Order</th>
-                        <th class="py-2 px-4">Customer</th>
-                        <th class="py-2 px-4">Amount</th>
-                        <th class="py-2 px-4">Status</th>
-                        <th class="py-2 px-4">Date</th>
-                    </tr>
-                </thead>
-                <tbody id="recentOrdersBody">
-                    <tr><td colspan="5" class="text-center text-gray-400 py-4">Loading...</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-    </main>
+        </main>
+    </div>
 </div>
 
 @vite('resources/js/dashboard/main.js')

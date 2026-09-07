@@ -3,19 +3,14 @@
 <div class="min-h-screen flex">
 
     <!-- Sidebar -->
-    <aside class="w-64 bg-gray-800 p-6 flex-shrink-0">
-        <h2 class="text-2xl font-bold text-indigo-400 mb-8">Clothify</h2>
-        <nav class="space-y-4">
-            <a href="{{ route('dashboard') }}" class="block text-gray-300 hover:text-white">Dashboard</a>
-            <a href="{{ route('products') }}"  class="block text-gray-300 hover:text-white">Products</a>
-            <a href="{{ route('orders') }}"    class="block text-white font-semibold">Orders</a>
-            <a href="{{ route('shop') }}" class="block text-gray-300 hover:text-white">Online Shop</a>
-            <button id="logoutBtn" class="mt-10 w-full text-left text-red-400 hover:text-red-500">Logout</button>
-        </nav>
-    </aside>
+    <x-sidebar />
+
+    <div class="flex-1 min-w-0">
+
+        <x-topbar />
 
     <!-- Main -->
-    <main class="flex-1 p-10 space-y-6">
+    <main class="p-10 space-y-6">
 
         <div class="flex items-center justify-between">
             <h1 class="text-3xl font-bold">Orders</h1>
@@ -62,7 +57,8 @@
         <!-- Pagination -->
         <div id="pagination" class="flex gap-2 justify-end"></div>
 
-    </main>
+        </main>
+    </div>
 </div>
 
 <!-- Order Detail Modal -->

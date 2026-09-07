@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Frontend Pages (API-first, token auth handled in JS)
+| Frontend Pages (API-first, session+CSRF auth handled in JS)
 |--------------------------------------------------------------------------
 */
 

@@ -8,4 +8,50 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+    --color-slate-850: #151d2e;
+    --color-slate-925: #0c1322;
+}
+
+.admin-shell {
+    background: #0b1120;
+}
+
+.focus-ring:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #0b1120, 0 0 0 4px #6366f1;
+}
+
+.admin-shell ::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+}
+.admin-shell ::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 4px;
+}
+.admin-shell ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease both;
+}
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.sidebar {
+    transition: transform 0.25s ease;
+}
+@media (max-width: 1023px) {
+    .admin-shell .sidebar.collapsed {
+        transform: translateX(-100%);
+    }
 }

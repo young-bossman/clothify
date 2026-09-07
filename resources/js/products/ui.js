@@ -39,7 +39,6 @@ export const dom = {
     editImageInput:       document.getElementById('editImage'),
     editImagePreview:     document.getElementById('editImagePreview'),
     editImageText:        document.getElementById('editImageText'),
-    logoutBtn:            document.getElementById('logoutBtn'),
     variantsModal: document.getElementById('variantsModal'),
 };
 
