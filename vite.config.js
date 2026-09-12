@@ -18,4 +18,20 @@ export default defineConfig({
         }),
         tailwindcss(),
     ],
+
+    // Runs inside the node container against a Windows bind mount.
+    server: {
+        host: '0.0.0.0',        // reachable from outside the container
+        port: 5173,
+        hmr: { host: 'localhost' },  // the browser is on the host, not the network
+        watch: {
+            // inotify events do not cross the Windows bind mount, so the
+            // watcher never fires and edits silently stop rebuilding.
+            usePolling: true,
+            // Polling stats every watched file on an interval. These three
+            // trees are tens of thousands of files we never edit, and leaving
+            // them in makes the first compile crawl.
+            ignored: ['**/vendor/**', '**/storage/**', '**/node_modules/**'],
+        },
+    },
 });

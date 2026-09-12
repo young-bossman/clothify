@@ -15,15 +15,22 @@
 
 <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-20 hidden lg:hidden"></div>
 
+{{-- lg:sticky + an explicit h-dvh: as a flex child the aside would otherwise
+     stretch to the full page height and scroll away with the content, taking
+     the logout button with it. The height is what gives sticky something to
+     pin. Below lg the drawer rules take over and shell.js owns `collapsed`. --}}
 <aside id="sidebar"
-    class="sidebar collapsed fixed lg:static top-0 left-0 z-30 w-64 h-dvh lg:h-auto shrink-0 flex flex-col justify-between bg-slate-925 border-r border-slate-800/80">
+    class="sidebar collapsed fixed lg:sticky top-0 lg:top-0 left-0 z-30 w-64 h-dvh shrink-0 flex flex-col bg-slate-925 border-r border-slate-800/80">
 
-    <div class="overflow-y-auto">
-        <div class="h-16 flex items-center gap-2 px-5 border-b border-slate-800/80">
-            <div class="w-7 h-7 rounded-md bg-indigo-600 flex items-center justify-center text-xs font-bold text-white">C</div>
-            <span class="text-lg font-bold text-white tracking-tight">Clothify</span>
-        </div>
+    {{-- Brand and logout are pinned; only the nav between them scrolls. --}}
+    <div class="h-16 shrink-0 flex items-center gap-2 px-5 border-b border-slate-800/80">
+        <div class="w-7 h-7 rounded-md bg-indigo-600 flex items-center justify-center text-xs font-bold text-white">C</div>
+        <span class="text-lg font-bold text-white tracking-tight">Clothify</span>
+    </div>
 
+    {{-- min-h-0 is load-bearing: a flex child defaults to min-height:auto and
+         refuses to shrink below its content, so the scrollbar never appears. --}}
+    <div class="flex-1 min-h-0 overflow-y-auto">
         <nav class="px-3 py-4 space-y-0.5 text-sm">
             <a href="{{ route('dashboard') }}" class="{{ $navBase }} {{ request()->routeIs('dashboard') ? $navActive : $navIdle }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
@@ -55,7 +62,7 @@
         </nav>
     </div>
 
-    <div class="p-3 border-t border-slate-800/80">
+    <div class="shrink-0 p-3 border-t border-slate-800/80">
         <button id="logoutBtn"
             class="w-full {{ $navBase }} text-rose-400 hover:bg-rose-500/10 text-sm font-medium">
             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 5v1a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2h6a2 2 0 012 2v1"/></svg>

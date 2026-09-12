@@ -5,6 +5,8 @@
  * Nothing in here makes network calls.
  */
 
+import { escapeHtml } from '../shared/escape.js';
+
 /* =========================================================
    DOM REFERENCES
 ========================================================= */
@@ -17,19 +19,6 @@ export const dom = {
     lowStockList:     document.getElementById('lowStockList'),
     recentOrdersBody: document.getElementById('recentOrdersBody'),
 };
-
-/* =========================================================
-   HTML ESCAPING
-   For values interpolated into innerHTML template strings.
-   Values set via textContent do not need this.
-========================================================= */
-const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;',
-}[char]));
 
 /* =========================================================
    STATUS BADGE HELPER

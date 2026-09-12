@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
 
   app:
@@ -28,6 +26,24 @@ services:
       - ./docker/nginx:/etc/nginx/conf.d
     depends_on:
       - app
+    networks:
+      - laravel
+
+  # Vite dev server. The app container has no Node, so asset builds live here.
+  node:
+    image: node:22-alpine
+    container_name: laravel_vite2
+    working_dir: /var/www
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/var/www
+      # Masks the host node_modules: it holds Windows-native esbuild and rollup
+      # binaries that abort on exec under Alpine. This named volume keeps a
+      # separate Linux install for the container.
+      - node_modules:/var/www/node_modules
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
     networks:
       - laravel
 
@@ -72,3 +88,4 @@ networks:
 
 volumes:
   dbdata:
+  node_modules:

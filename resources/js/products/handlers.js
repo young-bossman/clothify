@@ -91,12 +91,15 @@ export const loadProducts = async () => {
 
         if (!products.length) {
             renderEmptyRow(dom.productsTable);
+            // Both, not just the container — otherwise a filter that matches
+            // nothing still reads "Showing 1–12 of 15" under an empty table.
             dom.paginationContainer.innerHTML = '';
+            if (dom.paginationSummary) dom.paginationSummary.textContent = '';
             return;
         }
 
         renderProductRows(products, ctx.baseUrl, dom.productsTable);
-        renderPagination(json, dom.paginationContainer, (page) => {
+        renderPagination(json, dom.paginationContainer, dom.paginationSummary, (page) => {
             currentPage = page;
             loadProducts();
         });
@@ -385,9 +388,25 @@ export const bindUpdateProduct = () => {
 /* =========================================================
    FILTER AUTO RELOAD
 ========================================================= */
+const SEARCH_DEBOUNCE_MS = 300;
+
 export const bindFilters = () => {
-    [dom.searchInput, dom.statusFilter, dom.sortSelect, dom.categoryFilter].forEach(el => {
-        el?.addEventListener('input', () => { currentPage = 1; loadProducts(); });
+    /* Any filter change invalidates the current page number — the result set
+       is different, so page 3 of the old set means nothing in the new one. */
+    const reload = () => { currentPage = 1; loadProducts(); };
+
+    /* The search box fires once per keystroke. Without the debounce, typing
+       "hoodie" sent six requests that then raced each other to render. */
+    let searchTimer;
+    dom.searchInput?.addEventListener('input', () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(reload, SEARCH_DEBOUNCE_MS);
+    });
+
+    /* Selects settle in one interaction, so they reload immediately — and
+       `change` is the event that actually means "the user picked something". */
+    [dom.statusFilter, dom.categoryFilter, dom.sortSelect].forEach(el => {
+        el?.addEventListener('change', reload);
     });
 };
 
@@ -402,30 +421,31 @@ export const bindVariants = () => {
     const closeBtn     = document.getElementById('closeVariantsModal');
 
     const loadVariants = async () => {
-        variantsList.innerHTML = `<tr><td colspan="5" class="text-center text-gray-400 py-4">Loading...</td></tr>`;
+        variantsList.innerHTML = `<tr><td colspan="5" class="text-center text-slate-400 py-4">Loading...</td></tr>`;
         const variants = await fetchVariants({ ...ctx, productId: currentProductId });
 
         if (!variants.length) {
-            variantsList.innerHTML = `<tr><td colspan="5" class="text-center text-gray-400 py-4">No variants yet.</td></tr>`;
+            variantsList.innerHTML = `<tr><td colspan="5" class="text-center text-slate-400 py-4">No variants yet.</td></tr>`;
             return;
         }
 
+        // Row borders come from `divide-y` on #variantsList, as in the products table.
         variantsList.innerHTML = variants.map(v => `
-            <tr class="border-b border-gray-700 text-sm" data-variant-id="${v.id}">
+            <tr class="text-sm" data-variant-id="${v.id}">
                 <td class="py-2 px-2">
-                    <input class="bg-gray-700 rounded p-1 w-20 variantSize" value="${v.size}">
+                    <input class="focus-ring w-20 px-2 py-1 bg-slate-900 border border-slate-700 rounded text-slate-200 variantSize" value="${v.size}">
                 </td>
                 <td class="py-2 px-2">
-                    <input class="bg-gray-700 rounded p-1 w-24 variantColor" value="${v.color}">
+                    <input class="focus-ring w-24 px-2 py-1 bg-slate-900 border border-slate-700 rounded text-slate-200 variantColor" value="${v.color}">
                 </td>
                 <td class="py-2 px-2">
-                    <input type="number" class="bg-gray-700 rounded p-1 w-20 variantStock" value="${v.stock_quantity}">
+                    <input type="number" class="focus-ring w-20 px-2 py-1 bg-slate-900 border border-slate-700 rounded text-slate-200 variantStock" value="${v.stock_quantity}">
                 </td>
                 <td class="py-2 px-2">
-                    <button class="saveVariantBtn text-indigo-400 text-xs" data-id="${v.id}">Save</button>
+                    <button class="saveVariantBtn focus-ring text-indigo-400 hover:text-indigo-300 text-xs font-medium rounded" data-id="${v.id}">Save</button>
                 </td>
                 <td class="py-2 px-2">
-                    <button class="deleteVariantBtn text-red-400 text-xs" data-id="${v.id}">Delete</button>
+                    <button class="deleteVariantBtn focus-ring text-rose-400 hover:text-rose-300 text-xs font-medium rounded" data-id="${v.id}">Delete</button>
                 </td>
             </tr>
         `).join('');

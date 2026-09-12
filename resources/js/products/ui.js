@@ -8,6 +8,8 @@
  * Nothing in here makes network calls.
  */
 
+import { escapeHtml } from '../shared/escape.js';
+
 /* =========================================================
    DOM REFERENCES
 ========================================================= */
@@ -18,6 +20,7 @@ export const dom = {
     sortSelect:           document.getElementById('sortSelect'),
     categoryFilter:       document.getElementById('categoryFilter'),
     paginationContainer:  document.getElementById('paginationContainer'),
+    paginationSummary:    document.getElementById('paginationSummary'),
     createModal:          document.getElementById('createModal'),
     editModal:            document.getElementById('editModal'),
     productForm:          document.getElementById('productForm'),
@@ -57,7 +60,10 @@ export const showToast = (message, type = 'success') => {
     document.getElementById('toast')?.remove();
     const toast = document.createElement('div');
     toast.id = 'toast';
-    toast.className = `fixed top-5 right-5 z-[999] px-5 py-3 rounded-lg text-sm text-white shadow-lg transition-opacity duration-300 ${type === 'success' ? 'bg-green-600' : 'bg-red-600'}`;
+    toast.className = `fixed top-5 right-5 z-[999] px-4 py-2.5 rounded-lg text-sm font-medium shadow-lg border transition-opacity duration-300 ${
+        type === 'success'
+            ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
+            : 'bg-rose-500/15 border-rose-500/30 text-rose-300'}`;
     toast.textContent = message;
     document.body.appendChild(toast);
     setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
@@ -94,7 +100,17 @@ export const showErrors = (container, errors) => {
         errArray.forEach(msg => {
             const div = document.createElement('div');
             div.className = 'flex items-center gap-1';
-            div.innerHTML = `<span>•</span> ${msg}`;
+
+            const bullet = document.createElement('span');
+            bullet.textContent = '•';
+
+            // Validation messages quote the submitted value back at the user
+            // ("The sku has already been taken."), so the string is not ours
+            // to trust — build it as a text node rather than innerHTML.
+            const text = document.createElement('span');
+            text.textContent = msg;
+
+            div.append(bullet, text);
             container.appendChild(div);
         });
     });
@@ -137,10 +153,13 @@ export const populateCategorySelects = (categories, { createCategorySelect, edit
 /* =========================================================
    PRODUCTS TABLE
 ========================================================= */
+/* The table is eight columns wide; every full-width state row spans all of it. */
+const TABLE_COLUMNS = 8;
+
 export const renderLoadingRow = (productsTable) => {
     productsTable.innerHTML = `
         <tr>
-            <td colspan="10" class="py-10 text-center text-gray-400 text-sm">
+            <td colspan="${TABLE_COLUMNS}" class="py-12 text-center text-slate-400 text-sm">
                 <svg class="animate-spin h-5 w-5 mx-auto mb-2 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
@@ -151,37 +170,63 @@ export const renderLoadingRow = (productsTable) => {
 };
 
 export const renderEmptyRow = (productsTable) => {
-    productsTable.innerHTML = `<tr><td colspan="10" class="py-10 text-center text-gray-400 text-sm">No products found.</td></tr>`;
+    productsTable.innerHTML = `<tr><td colspan="${TABLE_COLUMNS}" class="py-12 text-center text-slate-400 text-sm">No products found.</td></tr>`;
 };
 
 export const renderErrorRow = (productsTable) => {
-    productsTable.innerHTML = `<tr><td colspan="10" class="py-10 text-center text-red-400 text-sm">Failed to load products. Please check your connection and try again.</td></tr>`;
+    productsTable.innerHTML = `<tr><td colspan="${TABLE_COLUMNS}" class="py-12 text-center text-rose-400 text-sm">Failed to load products. Please check your connection and try again.</td></tr>`;
 };
 
+/* =========================================================
+   ROW CELL HELPERS
+========================================================= */
+const stockCell = (quantity) => {
+    if (quantity <= 0) return `<span class="text-rose-400 font-medium">Out of stock</span>`;
+    if (quantity < 5)  return `<span class="text-amber-400 font-medium">Low (${quantity})</span>`;
+    return `<span class="text-emerald-400 font-medium">${quantity}</span>`;
+};
+
+/* Inactive is slate, not rose. Rose means "out of stock" in the column next
+   door, and an inactive product is a deliberate state, not a problem. */
+const statusPill = (isActive) => isActive
+    ? `<span class="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-xs font-medium">Active</span>`
+    : `<span class="px-2 py-0.5 rounded-full bg-slate-500/15 text-slate-400 text-xs font-medium">Inactive</span>`;
+
+const IMAGE_PLACEHOLDER = `<div class="w-9 h-9 rounded-md bg-slate-700"></div>`;
+
+/* Rows are rebuilt wholesale with innerHTML on every render, so there is no
+   stable element to bind an error listener to — the fallback has to be an
+   inline handler. Single quotes only: a double quote would close the
+   attribute and swallow the rest of the tag. */
+const IMAGE_FALLBACK = `this.replaceWith(Object.assign(document.createElement('div'), { className: 'w-9 h-9 rounded-md bg-slate-700' }))`;
+
+/*
+ * Product fields are free text typed in the admin, and every one of them
+ * lands in an innerHTML string here, so each goes through escapeHtml on the
+ * way in — including the ones sitting inside attributes, where an unescaped
+ * quote would break out of the attribute entirely.
+ *
+ * The row's border comes from `divide-y` on the <tbody>, not from the <tr>.
+ */
 export const renderProductRows = (products, baseUrl, productsTable) => {
     productsTable.innerHTML = products.map(p => {
         const imageUrl = p.image ? `${baseUrl}/storage/${p.image}` : null;
-        let stockBadge = p.stock_quantity <= 0
-            ? `<span class="text-red-400">Out of Stock</span>`
-            : p.stock_quantity < 5
-            ? `<span class="text-yellow-400">Low (${p.stock_quantity})</span>`
-            : `<span class="text-green-400">${p.stock_quantity}</span>`;
 
         return `
-            <tr class="border-b border-gray-700 text-sm">
-                <td class="py-2 px-2">${imageUrl ? `<img src="${imageUrl}" class="h-8 w-8 object-cover rounded">` : `<div class="h-8 w-8 bg-gray-700 rounded"></div>`}</td>
-                <td class="py-2 px-2">${p.name}</td>
-                <td class="py-2 px-2">${p.sku}</td>
-                <td class="py-2 px-2">${p.category?.name ?? '-'}</td>
-                <td class="py-2 px-2">${stockBadge}</td>
-                <td class="py-2 px-2">GHS ${p.price}</td>
-                <td class="py-2 px-2">GHS ${p.cost_price}</td>
-                <td class="py-2 px-2 max-w-[120px] truncate">${p.description ?? ''}</td>
-                <td class="py-2 px-2 ${p.is_active ? 'text-green-400' : 'text-red-400'}">${p.is_active ? 'Active' : 'Inactive'}</td>
-                <td class="py-2 px-2 text-right space-x-3">
-                    <button class="variantsBtn text-green-400" data-id="${p.id}" data-name="${p.name}">Variants</button>
-                    <button class="editBtn text-indigo-400" data-id="${p.id}">Edit</button>
-                    <button class="deleteBtn text-red-400" data-id="${p.id}">Delete</button>
+            <tr class="hover:bg-slate-800/40 transition">
+                <td class="px-4 py-3">${imageUrl
+                    ? `<img src="${escapeHtml(imageUrl)}" alt="" class="w-9 h-9 rounded-md object-cover bg-slate-700" onerror="${IMAGE_FALLBACK}">`
+                    : IMAGE_PLACEHOLDER}</td>
+                <td class="px-4 py-3 font-medium text-white">${escapeHtml(p.name)}</td>
+                <td class="px-4 py-3 text-slate-400 font-mono text-xs">${escapeHtml(p.sku)}</td>
+                <td class="px-4 py-3 text-slate-400">${escapeHtml(p.category?.name ?? '—')}</td>
+                <td class="px-4 py-3">${stockCell(p.stock_quantity)}</td>
+                <td class="px-4 py-3 text-slate-300">GHS ${Number(p.price).toFixed(2)}</td>
+                <td class="px-4 py-3">${statusPill(p.is_active)}</td>
+                <td class="px-4 py-3 text-right whitespace-nowrap space-x-3">
+                    <button class="variantsBtn focus-ring text-emerald-400 hover:text-emerald-300 text-xs font-medium rounded" data-id="${p.id}" data-name="${escapeHtml(p.name)}">Variants</button>
+                    <button class="editBtn focus-ring text-indigo-400 hover:text-indigo-300 text-xs font-medium rounded" data-id="${p.id}">Edit</button>
+                    <button class="deleteBtn focus-ring text-rose-400 hover:text-rose-300 text-xs font-medium rounded" data-id="${p.id}">Delete</button>
                 </td>
             </tr>`;
     }).join('');
@@ -190,14 +235,57 @@ export const renderProductRows = (products, baseUrl, productsTable) => {
 /* =========================================================
    PAGINATION
 ========================================================= */
-export const renderPagination = (json, paginationContainer, onPageChange) => {
+/* Button styling is shared by Prev, Next and the numbers so the disabled and
+   hover states cannot drift apart between them. */
+const pageButton = (label, { active = false, disabled = false, onClick }) => {
+    const btn = document.createElement('button');
+    btn.textContent = label;
+    btn.disabled = disabled;
+
+    const base = 'focus-ring rounded-lg text-xs font-medium';
+    btn.className = disabled
+        ? `${base} px-2.5 py-1 text-slate-600 cursor-not-allowed`
+        : active
+        ? `${base} w-7 h-7 bg-indigo-600 text-white`
+        : `${base} px-2.5 py-1 text-slate-300 hover:bg-slate-800`;
+
+    if (!disabled) btn.onclick = onClick;
+    return btn;
+};
+
+/*
+ * Summary counts come straight from the paginator (from/to/total) rather than
+ * being recomputed here — the API owns the page size, and duplicating that
+ * arithmetic is how the two drift apart.
+ *
+ * Prev/Next disabled state reads prev_page_url/next_page_url being null, which
+ * is the paginator's own answer to "is there another page", rather than
+ * comparing current_page against last_page ourselves.
+ */
+export const renderPagination = (json, paginationContainer, paginationSummary, onPageChange) => {
     if (!paginationContainer) return;
     paginationContainer.innerHTML = '';
-    for (let i = 1; i <= json.last_page; i++) {
-        const btn = document.createElement('button');
-        btn.textContent = i;
-        btn.className = `px-3 py-1 text-sm rounded ${i === json.current_page ? 'bg-indigo-600' : 'bg-gray-700'}`;
-        btn.onclick = () => onPageChange(i);
-        paginationContainer.appendChild(btn);
+
+    if (paginationSummary) {
+        paginationSummary.textContent = json.total === 0
+            ? ''
+            : `Showing ${json.from}–${json.to} of ${json.total}`;
     }
+
+    paginationContainer.appendChild(pageButton('Prev', {
+        disabled: json.prev_page_url === null,
+        onClick: () => onPageChange(json.current_page - 1),
+    }));
+
+    for (let i = 1; i <= json.last_page; i++) {
+        paginationContainer.appendChild(pageButton(i, {
+            active: i === json.current_page,
+            onClick: () => onPageChange(i),
+        }));
+    }
+
+    paginationContainer.appendChild(pageButton('Next', {
+        disabled: json.next_page_url === null,
+        onClick: () => onPageChange(json.current_page + 1),
+    }));
 };
